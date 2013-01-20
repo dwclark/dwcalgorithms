@@ -11,4 +11,10 @@
 
 	   #:hash-search #:hash-set #:hash-map #:multi-hash-map
 	   #:put-element #:get-element #:size 
-	   #:[] #:put-all-elements #:remove-element #:remove-all-elements))
+	   #:[] #:put-all-elements #:remove-element #:remove-all-elements
+
+	   #:binary-tree #:root #:data #:insert #:inorder-walk #:search-value
+	   #:min-value #:max-value #:successor-value #:predecessor-value 
+	   #:delete-value #:left-rotate #:right-rotate #:height-to-value
+
+	   #:red-black-tree))

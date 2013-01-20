@@ -11,5 +11,6 @@
 	       (:file "util")
 	       (:file "sorting")
 	       (:file "searching")
-	       (:file "hashing")))
+	       (:file "hashing")
+	       (:file "trees")))
 
