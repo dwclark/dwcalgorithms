@@ -8,32 +8,51 @@
    (load-factor :initform 0.75 :initarg :load-factor)
    (size :initform 0 :reader size)))
 
+(defun standard-initialize (hs capacity elements)
+  (let ((tmp-size (cond ((not (null elements)) (truncate (* 1.5 (length elements))))
+			(t capacity))))
+    (setf (slot-value hs 'table) (make-array tmp-size :initial-element nil))
+    (if (not (null elements))
+	(reduce #'insert elements :initial-value hs))))
+
+(defun hash-position (hash-collection element)
+  (with-slots (table hash-func) hash-collection
+    (mod (funcall hash-func element) (length table))))
+
+(defun exceeds-load-factor (hash-collection)
+  (with-slots (table filled-buckets load-factor) hash-collection
+    (< load-factor (/ filled-buckets (length table)))))
+
+(defun rehash (hash-collection)
+  (with-slots (table filled-buckets size) hash-collection
+    (let ((tmp table))
+      (setf table (make-array (* 2 (length tmp)) :initial-element nil))
+      (setf filled-buckets 0)
+      (setf size 0)
+      (loop for lst across tmp
+	 do (if (not (null lst))
+		(loop for e in lst
+		   do (put-element-internal hash-collection e)))))))
+
+(defun put-element-internal (hash-collection element)
+  (with-slots (table filled-buckets allow-duplicates size) hash-collection
+    (let ((pos (hash-position hash-collection element)))
+      (if (null (aref table pos))
+	  (progn
+	    (push element (aref table pos))
+	    (incf filled-buckets)
+	    (incf size))
+	  (place-in-list hash-collection pos element)))))
+
 (defmethod print-object ((hs hash-search) stream)
   (print-unreadable-object (hs stream :type t)
     (with-slots (table size filled-buckets) hs
       (format stream "~&size: ~a, filled-buckets: ~a~&table: ~a" 
 	      size filled-buckets table))))
 
-(defun standard-initialize (hs capacity elements)
-  (let ((tmp-size (cond ((not (null elements)) (truncate (* 1.5 (length elements))))
-			(t capacity))))
-    (setf (slot-value hs 'table) (make-array tmp-size :initial-element nil))
-    (if (not (null elements))
-	(put-all-elements hs elements))))
-
 (defmethod initialize-instance :after ((hs hash-search) &key (capacity 100) (elements nil))
   (if (eq 'hash-search (type-of hs))
       (standard-initialize hs capacity elements)))
-      
-(defgeneric hash-position (h e))
-(defmethod hash-position ((h hash-search) e)
-  (with-slots (table hash-func) h
-    (mod (funcall hash-func e) (length table))))
-
-(defgeneric exceeds-load-factor (h))
-(defmethod exceeds-load-factor ((h hash-search))
-  (with-slots (table filled-buckets load-factor) h
-    (< load-factor (/ filled-buckets (length table)))))
 
 (defgeneric place-in-list (h pos e))
 (defmethod place-in-list ((h hash-search) pos e)
@@ -41,42 +60,26 @@
     (push e (aref table pos))
     (incf size)))
 
-(defgeneric put-element (hs e))
-(defmethod put-element ((hs hash-search) e)
-  (if (exceeds-load-factor hs)
-      (rehash hs))
-
-  (put-element-internal hs e))
-
-(defun put-element-internal (hs e)
-  (with-slots (table filled-buckets allow-duplicates size) hs
-    (let ((pos (hash-position hs e)))
-      (if (null (aref table pos))
-	  (progn
-	    (push e (aref table pos))
-	    (incf filled-buckets)
-	    (incf size))
-	  (place-in-list hs pos e)))))
-
-(defgeneric put-all-elements (hs lst))
-(defmethod put-all-elements ((hs hash-search) elements)
-  (loop for element in elements do (put-element hs element)))
-
 (defgeneric get-from-list (hs pos e))
 (defmethod get-from-list ((hs hash-search) pos e)
   (with-slots (table equal-func) hs
     (remove-if-not (lambda (to-test)
 		     (funcall equal-func e to-test)) (aref table pos))))
 
-(defgeneric get-element (hs e))
-(defmethod get-element ((hs hash-search) e)
+(defmethod insert ((hs hash-search) e)
+  (if (exceeds-load-factor hs)
+      (rehash hs))
+  
+  (put-element-internal hs e)
+  hs)
+
+(defmethod search ((hs hash-search) e)
   (with-slots (table equal-func) hs
     (let ((pos (hash-position hs e)))
       (cond ((null (aref table pos)) nil)
 	    (t (get-from-list hs pos e))))))
 
-(defgeneric remove-element (hs e))
-(defmethod remove-element ((hs hash-search) e)
+(defmethod delete ((hs hash-search) e)
   (with-slots (table equal-func size filled-buckets) hs
     (let* ((pos (hash-position hs e))
 	   (num (count-if (lambda (x)
@@ -89,22 +92,6 @@
 	    (decf size num)
 	    (if (null (aref table pos))
 		(decf filled-buckets)))))))
-
-(defgeneric remove-all-elements (hs lst))
-(defmethod remove-all-elements ((hs hash-search) lst)
-  (loop for element in lst do (remove-element hs element)))
-
-(defgeneric rehash (h))
-(defmethod rehash ((h hash-search))
-  (with-slots (table filled-buckets size) h
-    (let ((tmp table))
-      (setf table (make-array (* 2 (length tmp)) :initial-element nil))
-      (setf filled-buckets 0)
-      (setf size 0)
-      (loop for lst across tmp
-	 do (if (not (null lst))
-		(loop for e in lst
-		   do (put-element-internal h e)))))))
 
 (defclass hash-set (hash-search) ())
 
@@ -152,17 +139,17 @@
 
 	    (t (setf (cdr cell) (cdr e)))))))
 
-(defmethod remove-element ((hm hash-map) e)
-  (call-next-method hm (cons e nil)))
+(defmethod delete ((hm hash-map) key)
+  (call-next-method hm (cons key nil)))
 
 (defmethod [] ((hm hash-map) key)
-  (let ((cell (get-element hm (cons key nil))))
+  (let ((cell (search hm (cons key nil))))
     (if (not (null cell))
 	(cdr cell)
 	nil)))
 
 (defmethod (setf []) (val (hm hash-map) key)
-  (put-element hm (cons key val)))
+  (insert hm (cons key val)))
 
 (defclass multi-hash-map (hash-search) ())
 
@@ -173,13 +160,13 @@
       (standard-initialize hm capacity elements)))
 
 (defmethod [] ((hm multi-hash-map) key)
-  (let ((lst (get-element hm (cons key nil))))
+  (let ((lst (search hm (cons key nil))))
     (if lst
 	(mapcar #'cdr lst)
 	nil)))
 
 (defmethod (setf []) (val (hm multi-hash-map) key)
-  (put-element hm (cons key val)))
+  (insert hm (cons key val)))
 
-(defmethod remove-element ((hm multi-hash-map) e)
-  (call-next-method hm (cons e nil)))
+(defmethod delete ((hm multi-hash-map) key)
+  (call-next-method hm (cons key nil)))

@@ -26,13 +26,18 @@
 
 (defclass binary-tree ()
   ((root :initform *nil-bt-node* :initarg :root :accessor root)
-   (cmp :initform #'<=> :initarg :cmp :accessor cmp)))
+   (cmp :initform #'<=> :initarg :cmp :reader cmp)))
 
-(defmethod initialize-instance :after ((tree binary-tree) &key (elements nil))
+(defun load-elements (tree elements)
   (if (not (null elements))
       (reduce (lambda (arg-tree element)
 		(insert arg-tree element)
 		arg-tree) elements :initial-value tree)))
+
+(defmethod initialize-instance :after ((tree binary-tree) &key (elements nil))
+  (if (or (eq (type-of tree) 'binary-tree)
+	  (eq (type-of tree) 'red-black-tree))
+      (load-elements tree elements)))
 
 (defgeneric new-node (tree value)
   (:method ((tree binary-tree) value)
@@ -112,9 +117,8 @@
 	   nil
 	   (data ,node)))))
 
-(defgeneric search-value (tree val)
-  (:method ((tree binary-tree) val)
-    (extract-data (search-node tree (root tree) val))))
+(defmethod search ((tree binary-tree) val)
+  (extract-data (search-node tree (root tree) val)))
 
 (defgeneric min-node (tree node)
   (:method ((tree binary-tree) (node bt-node))
@@ -125,9 +129,8 @@
        do (setf tmp (left tmp))
        finally (return tmp))))
 
-(defgeneric min-value (tree)
-  (:method ((tree binary-tree))
-    (extract-data (min-node tree (root tree)))))
+(defmethod minimum ((tree binary-tree))
+  (extract-data (min-node tree (root tree))))
 
 (defgeneric max-node (tree node)
   (:method ((tree binary-tree) (node bt-node))
@@ -138,9 +141,8 @@
        do (setf tmp (right tmp))
        finally (return tmp))))
 
-(defgeneric max-value (tree)
-  (:method ((tree binary-tree))
-    (extract-data (max-node tree (root tree)))))
+(defmethod maximum ((tree binary-tree))
+  (extract-data (max-node tree (root tree))))
 
 (defgeneric successor-node (tree node)
   (:method ((tree binary-tree) (node bt-node))
@@ -164,9 +166,8 @@
 	    (setf parent-node (parent parent-node)))
        finally (return parent-node))))
 
-(defgeneric successor-value (tree val)
-  (:method ((tree binary-tree) val)
-    (extract-data (successor-node tree (search-node tree (root tree) val)))))
+(defmethod successor ((tree binary-tree) val)
+  (extract-data (successor-node tree (search-node tree (root tree) val))))
 
 (defgeneric predecessor-node (tree node)
   (:method ((tree binary-tree) (node bt-node))
@@ -184,9 +185,8 @@
 	    (setf parent-node (parent parent-node)))
        finally (return parent-node))))
 
-(defgeneric predecessor-value (tree val)
-  (:method ((tree binary-tree) val)
-    (extract-data (predecessor-node tree (search-node tree (root tree) val)))))
+(defmethod predecessor ((tree binary-tree) val)
+  (extract-data (predecessor-node tree (search-node tree (root tree) val))))
 
 (defgeneric delete-node (tree node)
   (:method ((tree binary-tree) (node bt-node))
@@ -226,11 +226,10 @@
       
       (values splice-node child-node))))
 
-(defgeneric delete-value (tree val)
-  (:method ((tree binary-tree) val)
-    (let ((node (search-node tree (root tree) val)))
-      (if (not (nil? node))
-	  (extract-data (delete-node tree node))))))
+(defmethod delete ((tree binary-tree) val)
+  (let ((node (search-node tree (root tree) val)))
+    (if (not (nil? node))
+	(extract-data (delete-node tree node)))))
 
 (defgeneric left-rotate (tree x)
   (:method ((tree binary-tree) (x bt-node))
@@ -427,3 +426,47 @@
 		      (setf node (root tree))))))
 
 	 finally (setf (color node) 'black))))
+
+;;Simple tree map using red-black-tree.  The only things it
+;;really needs to do are 1) convert all values to cons cells
+;;2) Make sure duplicates are not added
+;;3) Add the [] methods
+(defclass tree-map (red-black-tree)
+  ((size :initform 0 :reader size)))
+
+(defmethod initialize-instance :after ((map tree-map) &key (elements nil))
+  (let ((old-cmp (cmp map)))
+    (setf (slot-value map 'cmp)
+	  (lambda (one two)
+	    (funcall old-cmp (car one) (car two)))))
+  (load-elements map elements))
+
+(defmethod insert ((map tree-map) val)
+  (let ((node (search-node map (root map) val)))
+    (if (not (nil? node))
+	(setf (cdr (data node)) (cdr val))
+	(progn
+	  (call-next-method)
+	  (incf (slot-value map 'size))))))
+
+(defmethod search ((map tree-map) key)
+  (let ((cell (call-next-method map (cons key nil))))
+    (if (not (null cell))
+	(cdr cell)
+	nil)))
+
+(defmethod delete ((map tree-map) key)
+  (let* ((cell (cons key nil))
+	 (node (search-node map (root map) cell)))
+    (if (not (nil? node))
+	(progn
+	  (delete-node map cell)
+	  (decf (slot-value map 'size))))))
+
+(defmethod [] ((map tree-map) key)
+  (search map key))
+
+(defmethod (setf []) (val (map tree-map) key)
+  (insert map (cons key val)))
+
+
