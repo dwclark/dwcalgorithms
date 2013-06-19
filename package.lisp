@@ -4,7 +4,7 @@
   (:use #:cl #:cl-utilities)
   (:shadow #:search #:delete #:sort)
   (:export #:sort #:comparable-array #:sorted-array #:ary #:sorted-array-set #:sorted-map
-	   #:search #:insert #:delete #:minimum #:maximum #:successor #:predecessor
+	   #:search #:insert #:delete #:minimum #:kth #:median #:maximum #:successor #:predecessor
 
 	   #:swap! #:shuffle! #:shuffle #:<=> #:<=>-ignore-case #:<=>-reverse #:sorted?
 	   #:partition! #:select-kth!

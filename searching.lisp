@@ -126,6 +126,17 @@
 	(aref ary 0)
 	nil)))
 
+(defmethod kth ((vec comparable-array) k)
+  (let ((idx (select-kth! (ary vec) (cmp vec) k 0 (1- (size vec)))))
+    (aref (ary vec) idx)))
+
+(defmethod kth ((vec sorted-array) k)
+  (aref (ary vec) (1- k)))
+
+(defmethod median ((vec comparable-array))
+  (let ((k (ash (size vec) -1)))
+    (kth vec k)))
+
 (defmethod maximum ((vec comparable-array))
   (with-slots (ary cmp) vec
     (if (< 0 (length ary))

@@ -284,17 +284,19 @@
   
 (defparameter *nil-red-black-node* (make-instance 'red-black-node))
 
+(defun init-rb-node (node nil-node)
+  (if (not (slot-boundp node 'right))
+      (setf (right node) nil-node))
+  
+  (if (not (slot-boundp node 'left))
+      (setf (left node) nil-node))
+  
+  (if (not (slot-boundp node 'parent))
+      (setf (parent node) nil-node)))
+
 (defmethod initialize-instance :after ((node red-black-node) &key)
   (if (eq (type-of node) 'red-black-node)
-      (progn 
-	(if (not (slot-boundp node 'right))
-	    (setf (right node) *nil-red-black-node*))
-	
-	(if (not (slot-boundp node 'left))
-	    (setf (left node) *nil-red-black-node*))
-	
-	(if (not (slot-boundp node 'parent))
-	    (setf (parent node) *nil-red-black-node*)))))
+      (init-rb-node node *nil-red-black-node*)))
 
 (defmethod nil? ((node red-black-node))
   (eq *nil-red-black-node* node))
@@ -356,11 +358,11 @@
 (defmethod delete-node ((tree red-black-tree) (node red-black-node))
   (multiple-value-bind (splice-node child-node) (call-next-method)
     (if (eq 'black (color splice-node))
-	(delete-fixup tree child-node))
+	(delete-fixup tree child-node splice-node))
     (values splice-node child-node)))
 
-(defgeneric delete-fixup (tree node)
-  (:method ((tree red-black-tree) (the-node red-black-node))
+(defgeneric delete-fixup (tree node splice-node)
+  (:method ((tree red-black-tree) (the-node red-black-node) (splice-node red-black-node))
     (loop with node = the-node
        while (and (not (eq node (root tree)))
 		  (eq (color node) 'black))
@@ -427,10 +429,6 @@
 
 	 finally (setf (color node) 'black))))
 
-;;Simple tree map using red-black-tree.  The only things it
-;;really needs to do are 1) convert all values to cons cells
-;;2) Make sure duplicates are not added
-;;3) Add the [] methods
 (defclass tree-map (red-black-tree)
   ((size :initform 0 :reader size)))
 
@@ -470,3 +468,53 @@
   (insert map (cons key val)))
 
 
+(defclass order-statistic-node (red-black-node)
+  ((size :initform 1 :initarg :size :accessor size)))
+
+(defparameter *nil-order-statistic-node* 
+  (make-instance 'order-statistic-node :size 0))
+
+(defmethod initialize-instance :after ((node order-statistic-node) &key)
+  (if (eq (type-of node) 'order-statistic-node)
+      (init-rb-node node *nil-order-statistic-node*)))
+
+(defmethod nil? ((node order-statistic-node))
+  (eq *nil-order-statistic-node* node))
+
+(defclass order-statistic-tree (red-black-tree)
+  ((root :initform *nil-order-statistic-node* :initarg :root :accessor root)))
+
+(defmethod new-node ((tree order-statistic-tree) value)
+  (make-instance 'order-statistic-tree :data value))
+
+(defmethod nil-node ((tree order-statistic-tree))
+  *nil-order-statistic-node*)
+
+(defmethod insert-fixup ((tree order-statistic-tree) (new-node order-statistic-node))
+  (labels ((increment-size (node)
+	     (if (not (nil? node))
+		 (progn
+		   (incf (size node))
+		   (increment-size (parent node))))))
+    (increment-size (parent new-node)))
+  (call-next-method))
+
+(defmethod delete-fixup ((tree order-statistic-tree) (the-node order-statistic-node)
+			 (splice-node order-statistic-node))
+  (labels ((decrement-size (node)
+	     (if (not (nil? node))
+		 (progn
+		   (decf (size node))
+		   (decrement-size (parent node))))))
+    (decrement-size (parent splice-node)))
+  (call-next-method))
+
+(defmethod left-rotate ((tree order-statistic-tree) (x order-statistic-node))
+  (let ((y (right x)))
+    (setf (size y) (size x))
+    (setf (size x) (+ (size (left x)) (size (right x)) 1)))
+  (call-next-method))
+
+(defmethod right-rotate ((tree order-statistic-tree) (x order-statistic-node))
+  ;;TODO: finish this method
+)

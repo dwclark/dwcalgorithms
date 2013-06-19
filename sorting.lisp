@@ -170,13 +170,20 @@
 	    (push element (aref working the-hash))))
     (loop with idx = 0
        for lst across working
-       do (cond ((= 1 (length lst))
-		 (setf (aref vec idx) (car lst))
-		 (incf idx))
-		((< 1 (length lst))
-		 (let ((ary (make-array (length lst) :initial-contents lst)))
-		   (loop for element across (insertion-sort! ary cmp)
-		      do (progn
-			   (setf (aref vec idx) element)
-			   (incf idx))))))))
+       do (cond 
+	    ;case of null list at position 
+	    ((null lst) nil)
+
+	    ;single element list, just add to next slot
+	    ((= 1 (length lst))
+	     (setf (aref vec idx) (car lst))
+	     (incf idx))
+	    
+	    ;multiple element list, need to do a quick insertion sort
+	    ((< 1 (length lst))
+	     (let ((ary (make-array (length lst) :initial-contents lst)))
+	       (loop for element across (insertion-sort! ary cmp :start-index 1)
+		  do (progn
+		       (setf (aref vec idx) element)
+		       (incf idx))))))))
   vec)
