@@ -3,10 +3,6 @@
 (defclass stack ()
   ((top :initform nil)))
 
-(defgeneric push (the-stack element))
-(defgeneric pop (the-stack))
-(defgeneric peek (the-stack))
-
 (defmethod push ((the-stack stack) element)
   (with-slots (top) the-stack
     (setf top (cons element top))))

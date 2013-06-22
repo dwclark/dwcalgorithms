@@ -10,3 +10,6 @@
 (defgeneric successor (collection value))
 (defgeneric predecessor (collection value))
 
+(defgeneric push (the-stack element))
+(defgeneric pop (the-stack))
+(defgeneric peek (the-stack))
