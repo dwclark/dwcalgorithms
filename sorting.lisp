@@ -167,7 +167,7 @@
   (let ((working (make-array (length vec) :initial-element nil)))
     (loop for element across vec
        do (let ((the-hash (funcall hash (length vec) element)))
-	    (push element (aref working the-hash))))
+	    (cl:push element (aref working the-hash))))
     (loop with idx = 0
        for lst across working
        do (cond 

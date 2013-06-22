@@ -12,5 +12,6 @@
 	       (:file "sorting")
 	       (:file "searching")
 	       (:file "hashing")
-	       (:file "trees")))
+	       (:file "trees")
+	       (:file "stack")))
 

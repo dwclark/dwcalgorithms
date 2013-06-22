@@ -39,7 +39,7 @@
     (let ((pos (hash-position hash-collection element)))
       (if (null (aref table pos))
 	  (progn
-	    (push element (aref table pos))
+	    (cl:push element (aref table pos))
 	    (incf filled-buckets)
 	    (incf size))
 	  (place-in-list hash-collection pos element)))))
@@ -57,7 +57,7 @@
 (defgeneric place-in-list (h pos e))
 (defmethod place-in-list ((h hash-search) pos e)
   (with-slots (table size) h
-    (push e (aref table pos))
+    (cl:push e (aref table pos))
     (incf size)))
 
 (defgeneric get-from-list (hs pos e))
@@ -104,7 +104,7 @@
     (if (null (find-if (lambda (x)
 			 (funcall equal-func x e)) (aref table pos)))
 	(progn
-	  (push e (aref table pos))
+	  (cl:push e (aref table pos))
 	  (incf size)))))
 
 (defmethod get-from-list ((h hash-set) pos e)
@@ -134,7 +134,7 @@
     (let ((cell (find-if (lambda (cell)
 			   (funcall equal-func cell e)) (aref table pos))))
       (cond ((null cell)
-	     (push e (aref table pos))
+	     (cl:push e (aref table pos))
 	     (incf size))
 
 	    (t (setf (cdr cell) (cdr e)))))))
