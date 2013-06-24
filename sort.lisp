@@ -126,31 +126,9 @@
 	      (swap! vec the-min i))))
   vec)
 
-(defun heapify! (vec func idx max)
-  (let ((left (+ 1 (* 2 idx)))
-	(right (+ 2 (* 2 idx)))
-	(largest nil))
-    (if (and (< left max) (> (funcall func (aref vec left) (aref vec idx)) 0))
-	(setf largest left)
-	(setf largest idx))
-    (if (and (< right max) (> (funcall func (aref vec right) (aref vec largest)) 0))
-	(setf largest right))
-    (if (not (= largest idx))
-	(progn
-	  (swap! vec largest idx)
-	  (heapify! vec func largest max)))))
-
-(defun build-heap! (vec func n)
-  (loop for i from (1- (truncate (/ n 2))) downto 0
-     do (heapify! vec func i n)))
-
 (defun heap-sort! (vec func)
-  (build-heap! vec func (length vec))
-  (loop for i from (1- (length vec)) downto 1
-     do (progn
-	  (swap! vec 0 i)
-	  (heapify! vec func 0 i)))
-  vec)
+  (heap->sorted (make-instance 'heap :init-ary vec :build? t
+			       :cmp-func (<=>-reverse func))))
 
 (defun counting-sort! (vec &optional (k (reduce (lambda (x y) (max x y)) vec)))
   (let ((tmp (make-array (1+ k) :initial-element 0)))

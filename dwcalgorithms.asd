@@ -14,5 +14,6 @@
 	       (:file "hash")
 	       (:file "tree")
 	       (:file "stack")
+	       (:file "heap")
 	       (:file "queue")))
 

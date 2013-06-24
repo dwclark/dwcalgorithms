@@ -12,4 +12,7 @@
 
 (defgeneric push (the-stack element))
 (defgeneric pop (the-stack))
-(defgeneric peek (the-stack))
+(defgeneric peek (collection))
+
+(defgeneric enqueue (the-queue element))
+(defgeneric dequeue (the-queue))

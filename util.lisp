@@ -16,3 +16,33 @@
 
 (defun shuffle (vec &key (factor 2))
    (shuffle! (copy-array vec) :factor factor))
+
+(defun shift-left! (ary)
+  (if (= 0 (length ary))
+      nil
+      (progn
+	(let ((first (aref ary 0)))
+	  (loop for i from 0 below (1- (length ary))
+	     do (setf (aref ary i) (aref ary (1+ i))))
+	  (setf (fill-pointer ary) (1- (fill-pointer ary)))
+	  first))))
+
+(defmacro <? (func left right)
+  (once-only (func left right)
+    `(= -1 (funcall ,func ,left ,right))))
+
+(defmacro >? (func left right)
+  (once-only (func left right)
+    `(= 1 (funcall ,func ,left ,right))))
+
+(defmacro =? (func left right)
+  (once-only (func left right)
+    `(= 0 (funcall ,func ,left ,right))))
+
+(defmacro <=? (func left right)
+  (once-only (func left right)
+    `(>= 0 (funcall ,func ,left ,right))))
+
+(defmacro >=? (func left right)
+  (once-only (func left right)
+    `(<= 0 (funcall ,func ,left ,right))))
