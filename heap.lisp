@@ -87,18 +87,18 @@
   (with-slots (ary cmp size) the-heap
     (let ((left (left-index i))
 	  (right (right-index i))
-	  (smallest i))
+	  (extremum i))
       
-      (if (and (< left size) (<? cmp (aref ary left) (aref ary smallest)))
-	  (setf smallest left))
+      (if (and (< left size) (<? cmp (aref ary left) (aref ary extremum)))
+	  (setf extremum left))
       
-      (if (and (< right size) (<? cmp (aref ary right) (aref ary smallest)))
-	  (setf smallest right))
+      (if (and (< right size) (<? cmp (aref ary right) (aref ary extremum)))
+	  (setf extremum right))
       
-      (if (not (= smallest i))
+      (if (not (= extremum i))
 	  (progn 
-	    (swap! ary smallest i)
-	    (heapify the-heap smallest))))))
+	    (swap! ary extremum i)
+	    (heapify the-heap extremum))))))
 
 (defmethod build ((the-heap heap))
   (with-slots (ary cmp size) the-heap

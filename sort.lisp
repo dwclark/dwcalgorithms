@@ -4,18 +4,18 @@
 
 (defmethod <=> ((first real) (second real))
   (cond ((< first second) -1)
-	((= first second) 0)
-	(t 1)))
+        ((= first second) 0)
+        (t 1)))
 
 (defmethod <=> ((first string) (second string))
   (cond ((string< first second) -1)
-	((string= first second) 0)
-	(t 1)))
+        ((string= first second) 0)
+        (t 1)))
 
 (defmethod <=> ((first character) (second character))
   (cond ((char< first second) -1)
-	((string= first second) 0)
-	(t 1)))
+        ((string= first second) 0)
+        (t 1)))
 
 (defgeneric <=>-ignore-case (first second))
 
@@ -165,3 +165,51 @@
 		       (setf (aref vec idx) element)
 		       (incf idx))))))))
   vec)
+
+(defun merge-sort! (vec cmp)
+  
+  (let* ((tmp-size (ceiling (/ (length vec) 2)))
+         (left-array (make-array tmp-size :initial-element nil))
+         (right-array (make-array tmp-size :initial-element nil)))
+    
+    (labels
+        ((inner-copy (target lower upper)
+           (loop for i from lower below upper
+              do (setf (aref target (- i lower)) (aref vec i))))
+         
+         (inner-merge (lower-bound pivot upper-bound)
+           (let ((left-size (- pivot lower-bound))
+                 (right-size (- upper-bound pivot)))
+             (inner-copy left-array lower-bound pivot)
+             (inner-copy right-array pivot upper-bound)
+             (loop
+                with left-i = 0
+                with right-i = 0
+                for i from lower-bound below upper-bound
+                do  (labels
+                        ((choose-left ()
+                           (setf (aref vec i) (aref left-array left-i))
+                           (incf left-i))
+                         (choose-right ()
+                           (setf (aref vec i) (aref right-array right-i))
+                           (incf right-i)))
+
+                      (cond 
+                        ((= right-i right-size) (choose-left))
+                        
+                        ((= left-i left-size) (choose-right))
+                        
+                        ((< (funcall cmp (aref left-array left-i) (aref right-array right-i)) 0) (choose-left))
+                        
+                        (t (choose-right)))))))
+         
+         
+         (inner-merge-sort (lower-bound upper-bound)
+           (if (< (1+ lower-bound) upper-bound)
+               (let ((pivot (floor (/ (+ upper-bound lower-bound) 2))))
+                 (inner-merge-sort lower-bound pivot)
+                 (inner-merge-sort pivot upper-bound)
+                 (inner-merge lower-bound pivot upper-bound)))))
+      
+      (inner-merge-sort 0 (length vec))
+      vec)))
