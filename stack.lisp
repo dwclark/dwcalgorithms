@@ -10,11 +10,11 @@
 (defmethod pop ((the-stack stack))
   (with-slots (top) the-stack
     (if top
-	(let ((ret (car top)))
-	  (setf top (cdr top))
-	  ret))))
+        (let ((ret (car top)))
+          (setf top (cdr top))
+          ret))))
 
 (defmethod peek ((the-stack stack))
   (with-slots (top) the-stack
     (if top
-	(car top))))
+        (car top))))
