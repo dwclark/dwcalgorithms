@@ -16,7 +16,10 @@
            
            #:hash-search #:hash-set #:hash-map #:multi-hash-map #:size #:[]
            
-           #:binary-tree #:red-black-tree #:tree-map
+           #:binary-tree-node #:binary-tree #:right #:left #:leaf? #:nil? #:nil-node
+           #:pre-order #:in-order #:post-order #:merge-trees
+           #:insert-left #:insert-right #:remove-left #:remove-right #:clear
+           #:search-tree #:red-black-tree #:tree-map
            #:root #:data #:inorder-walk #:left-rotate #:right-rotate #:height-to-value
            
            ;stack operations

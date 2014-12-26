@@ -1,31 +1,30 @@
 (in-package #:dwcalgorithms)
 
-(defclass bt-node ()
+(defclass search-node ()
   ((data :initform nil :initarg :data :accessor data)
    (right :initarg :right :accessor right)
    (left :initarg :left :accessor left)
    (parent :initarg :parent :accessor parent)))
 
-(defparameter *nil-bt-node* (make-instance 'bt-node))
+(defparameter *nil-search-node* (make-instance 'search-node))
 
-(defmethod initialize-instance :after ((node bt-node) &key)
-  (if (eq (type-of node) 'bt-node)
+(defmethod initialize-instance :after ((node search-node) &key)
+  (if (eq (type-of node) 'search-node)
       (progn 
 	(if (not (slot-boundp node 'right))
-	    (setf (right node) *nil-bt-node*))
+	    (setf (right node) *nil-search-node*))
 	
 	(if (not (slot-boundp node 'left))
-	    (setf (left node) *nil-bt-node*))
+	    (setf (left node) *nil-search-node*))
 	
 	(if (not (slot-boundp node 'parent))
-	    (setf (parent node) *nil-bt-node*)))))
+	    (setf (parent node) *nil-search-node*)))))
 
-(defgeneric nil? (node)
-  (:method ((node bt-node))
-    (eq node *nil-bt-node*)))
+(defmethod nil? ((node search-node))
+  (eq node *nil-search-node*))
 
-(defclass binary-tree ()
-  ((root :initform *nil-bt-node* :initarg :root :accessor root)
+(defclass search-tree ()
+  ((root :initform *nil-search-node* :initarg :root :accessor root)
    (cmp :initform #'<=> :initarg :cmp :reader cmp)))
 
 (defun load-elements (tree elements)
@@ -35,22 +34,23 @@
                 arg-tree) 
               elements :initial-value tree)))
 
-(defmethod initialize-instance :after ((tree binary-tree) &key (elements nil))
-  (if (or (eq (type-of tree) 'binary-tree)
+(defmethod initialize-instance :after ((tree search-tree) &key (elements nil))
+  (if (or (eq (type-of tree) 'search-tree)
 	  (eq (type-of tree) 'red-black-tree))
       (load-elements tree elements)))
 
-(defgeneric new-node (tree value)
-  (:method ((tree binary-tree) value)
-    (make-instance 'bt-node :data value)))
+(defgeneric new-node (tree value))
+
+(defmethod new-node ((tree search-tree) value)
+  (make-instance 'search-node :data value))
 
 (defgeneric nil-node (tree)
-  (:method ((tree binary-tree))
-    *nil-bt-node*))
+  (:method ((tree search-tree))
+    *nil-search-node*))
 
 (defgeneric insert (tree value))
 
-(defmethod insert ((tree binary-tree) value)
+(defmethod insert ((tree search-tree) value)
     (with-accessors ((root root) (cmp cmp)) tree
       (let ((new-node (new-node tree value))
             (new-parent (nil-node tree))
@@ -87,7 +87,7 @@
 
 (defgeneric inorder-walk (tree func))
 
-(defmethod inorder-walk ((tree binary-tree) func)
+(defmethod inorder-walk ((tree search-tree) func)
   (labels 
       ((do-walk (node)
          (if (not (nil? node))
@@ -98,7 +98,7 @@
 
 (defgeneric search-node (tree node val))
 
-(defmethod search-node ((tree binary-tree) (node bt-node) val)
+(defmethod search-node ((tree search-tree) (node search-node) val)
   (if (nil? node)
       (return-from search-node node))
 
@@ -114,12 +114,12 @@
            nil
            (data ,node)))))
 
-(defmethod search ((tree binary-tree) val)
+(defmethod search ((tree search-tree) val)
   (extract-data (search-node tree (root tree) val)))
 
 (defgeneric min-node (tree node))
 
-(defmethod min-node ((tree binary-tree) (node bt-node))
+(defmethod min-node ((tree search-tree) (node search-node))
   ;;Loop until there are no left nodes to follow.  Once
   ;;(left tmp) is nil, we have found the left most node
   (loop 
@@ -128,12 +128,12 @@
      do (setf tmp (left tmp))
      finally (return tmp)))
 
-(defmethod minimum ((tree binary-tree))
+(defmethod minimum ((tree search-tree))
   (extract-data (min-node tree (root tree))))
 
 (defgeneric max-node (tree node))
 
-(defmethod max-node ((tree binary-tree) (node bt-node))
+(defmethod max-node ((tree search-tree) (node search-node))
   ;;Loop until there are no right nodes to follow.  Once
   ;;(right tmp) is nil, we have found the right most node
   (loop 
@@ -142,12 +142,12 @@
      do (setf tmp (right tmp))
      finally (return tmp)))
 
-(defmethod maximum ((tree binary-tree))
+(defmethod maximum ((tree search-tree))
   (extract-data (max-node tree (root tree))))
 
 (defgeneric successor-node (tree node))
 
-(defmethod successor-node ((tree binary-tree) (node bt-node))
+(defmethod successor-node ((tree search-tree) (node search-node))
   ;;If the node to the right is not nil, then the next element
   ;;will simply be the minimum element in the right tree.
   (if (not (nil? (right node)))
@@ -169,12 +169,12 @@
           (setf parent-node (parent parent-node)))
      finally (return parent-node)))
 
-(defmethod successor ((tree binary-tree) val)
+(defmethod successor ((tree search-tree) val)
   (extract-data (successor-node tree (search-node tree (root tree) val))))
 
 (defgeneric predecessor-node (tree node))
 
-(defmethod predecessor-node ((tree binary-tree) (node bt-node))
+(defmethod predecessor-node ((tree search-tree) (node search-node))
   ;;Symmetric to successor-node, but with max-node in place
   ;;of min-node and left and rights swapped.  See successor-node
   ;;for more details
@@ -190,12 +190,12 @@
           (setf parent-node (parent parent-node)))
      finally (return parent-node)))
 
-(defmethod predecessor ((tree binary-tree) val)
+(defmethod predecessor ((tree search-tree) val)
   (extract-data (predecessor-node tree (search-node tree (root tree) val))))
 
 (defgeneric delete-node (tree node))
 
-(defmethod delete-node ((tree binary-tree) (node bt-node))
+(defmethod delete-node ((tree search-tree) (node search-node))
   (let ((delete-node node)
         (splice-node (nil-node tree))
         (child-node (nil-node tree)))
@@ -234,14 +234,14 @@
       
       (values splice-node child-node)))
 
-(defmethod delete ((tree binary-tree) val)
+(defmethod delete ((tree search-tree) val)
   (let ((node (search-node tree (root tree) val)))
     (if (not (nil? node))
         (extract-data (delete-node tree node)))))
 
 (defgeneric left-rotate (tree x))
 
-(defmethod left-rotate ((tree binary-tree) (x bt-node))
+(defmethod left-rotate ((tree search-tree) (x search-node))
   (let ((y (right x)))
     (setf (right x) (left y))
     (if (not (nil? (left y)))
@@ -260,7 +260,7 @@
 
 (defgeneric right-rotate (tree x))
 
-(defmethod right-rotate ((tree binary-tree) (x bt-node))
+(defmethod right-rotate ((tree search-tree) (x search-node))
   (let ((y (left x)))
     (setf (left x) (right y))
     (if (not (nil? (right y)))
@@ -279,7 +279,7 @@
 
 (defgeneric height-to-value (tree val))
 
-(defmethod height-to-value ((tree binary-tree) val)
+(defmethod height-to-value ((tree search-tree) val)
   (loop 
      with node = (root tree)
      with height = 1
