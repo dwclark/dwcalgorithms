@@ -133,3 +133,23 @@
 
 (defmethod post-order ((tree binary-tree) proc)
   (post-order (root tree) proc))
+
+(defclass reversible-binary-tree-node (binary-tree-node)
+  ((parent :initform nil :initarg :parent :accessor parent)))
+
+(defgeneric right? (node))
+(defgeneric left? (node))
+
+(defmacro direction? (node direction-func)
+  `(with-accessors ((parent parent)) node
+     (if (or (null parent)
+             (null (,direction-func parent)))
+         nil
+         (eq (,direction-func parent) node))))
+
+(defmethod right? ((node reversible-binary-tree-node))
+  (direction? node right))
+
+(defmethod left? ((node reversible-binary-tree-node))
+  (direction? node right))
+        
