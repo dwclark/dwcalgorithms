@@ -22,14 +22,14 @@
 
 (defun run-all-tests ()
   (loop 
-     for sym in (list (uiop:find-symbol* '#:sort-suite :dwcalgorithms)
-                      (uiop:find-symbol* '#:hash-suite :dwcalgorithms)
-                      (uiop:find-symbol* '#:heap-suite :dwcalgorithms)
-                      (uiop:find-symbol* '#:queue-suite :dwcalgorithms)
-                      (uiop:find-symbol* '#:search-suite :dwcalgorithms)
-                      (uiop:find-symbol* '#:stack-suite :dwcalgorithms)
-                      (uiop:find-symbol* '#:tree-suite :dwcalgorithms)
-                      (uiop:find-symbol* '#:util-suite :dwcalgorithms)
+     for sym in (list ;(uiop:find-symbol* '#:sort-suite :dwcalgorithms)
+                      ;(uiop:find-symbol* '#:hash-suite :dwcalgorithms)
+                      ;(uiop:find-symbol* '#:heap-suite :dwcalgorithms)
+                      ;(uiop:find-symbol* '#:queue-suite :dwcalgorithms)
+                      ;(uiop:find-symbol* '#:search-suite :dwcalgorithms)
+                      ;(uiop:find-symbol* '#:stack-suite :dwcalgorithms)
+                      ;(uiop:find-symbol* '#:tree-suite :dwcalgorithms)
+                      ;(uiop:find-symbol* '#:util-suite :dwcalgorithms)
                       (uiop:find-symbol* '#:binary-tree-suite :dwcalgorithms))
      do (uiop:symbol-call :fiveam '#:run! sym)))
 

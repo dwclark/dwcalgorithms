@@ -1,6 +1,6 @@
 (in-package #:dwcalgorithms)
 
-(defclass binary-tree-node ()
+(defclass binary-node ()
   ((data :initform nil :initarg :data :accessor data)
    (right :initform nil :initarg :right :accessor right)
    (left :initform nil :initarg :left :accessor left)))
@@ -10,11 +10,11 @@
 (defgeneric in-order (node proc))
 (defgeneric post-order (node proc))
 
-(defmethod leaf? ((node binary-tree-node))
+(defmethod leaf? ((node binary-node))
   (and (null (right node))
        (null (left node))))
 
-(defmethod pre-order ((node binary-tree-node) proc)
+(defmethod pre-order ((node binary-node) proc)
   (labels
       ((inner (node)
          (if (not (null node))
@@ -27,22 +27,22 @@
                (if (not (null (right node)))
                    (inner (right node)))))))
     (inner node)))
-        
-(defmethod in-order ((node binary-tree-node) proc)
+
+(defmethod in-order ((node binary-node) proc)
   (labels
       ((inner (node)
          (if (not (null node))
              (progn
                (if (not (null (left node)))
                    (inner (left node)))
-        
+               
                (funcall proc (data node))
 
                (if (not (null (right node)))
                    (inner (right node)))))))
     (inner node)))
 
-(defmethod post-order ((node binary-tree-node) proc)
+(defmethod post-order ((node binary-node) proc)
   (labels
       ((inner (node)
          (if (not (null node))
@@ -59,7 +59,7 @@
 (defclass binary-tree ()
   ((root :initform nil :accessor root)
    (size :initform 0 :accessor size)
-   (node-type :initform 'binary-tree-node :reader node-type :allocation :class)))
+   (node-type :initform 'binary-node :reader node-type :allocation :class)))
 
 (defgeneric clear (tree))
 (defgeneric new-node (tree data))
@@ -116,7 +116,7 @@
   (remove-at tree node right))
 
 (defmethod merge-trees ((left-tree binary-tree) (right-tree binary-tree) data)
-  (let ((merged (make-instance 'binary-tree)))
+  (let ((merged (make-instance (type-of left-tree))))
     (insert-left merged nil data)
     (setf (left (root merged)) (root left-tree))
     (setf (right (root merged)) (root right-tree))
@@ -134,7 +134,7 @@
 (defmethod post-order ((tree binary-tree) proc)
   (post-order (root tree) proc))
 
-(defclass reversible-binary-tree-node (binary-tree-node)
+(defclass binary-node-with-parent (binary-node)
   ((parent :initform nil :initarg :parent :accessor parent)))
 
 (defgeneric right? (node))
@@ -147,9 +147,34 @@
          nil
          (eq (,direction-func parent) node))))
 
-(defmethod right? ((node reversible-binary-tree-node))
+(defmethod right? ((node binary-node-with-parent))
   (direction? node right))
 
-(defmethod left? ((node reversible-binary-tree-node))
-  (direction? node right))
-        
+(defmethod left? ((node binary-node-with-parent))
+  (direction? node left))
+
+(defclass binary-tree-with-parent (binary-tree)
+  ((node-type :initform 'binary-node-with-parent :reader node-type :allocation :class)))
+
+(defmethod new-node ((tree binary-tree-with-parent) data)
+  (make-instance (node-type tree) :data data))
+
+(defun set-my-parent (new-node node)
+  (if (not (null node))
+      (setf (parent new-node) node))
+  new-node)
+
+(defmethod insert-left ((tree binary-tree-with-parent) node data)
+  (set-my-parent (call-next-method) node))
+
+(defmethod insert-right ((tree binary-tree-with-parent) node data)
+  (set-my-parent (call-next-method) node))
+
+(defmethod merge-trees ((left-tree binary-tree-with-parent) (right-tree binary-tree-with-parent) data)
+  (let* ((left-root (root left-tree))
+         (right-root (root right-tree))
+         (new-tree (call-next-method))
+         (new-root (root new-tree)))
+    (setf (parent left-root) new-root)
+    (setf (parent right-root) new-root)
+    new-tree))

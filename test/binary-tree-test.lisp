@@ -4,14 +4,14 @@
 (5am:in-suite binary-tree-suite)
 
 (5am:test create-node
-  (let ((the-node (make-instance 'binary-tree-node :data 1)))
+  (let ((the-node (make-instance 'binary-node :data 1)))
     (5am:is (= 1 (data the-node)))
     (5am:is (null (right the-node)))
     (5am:is (null (left the-node)))
     (5am:is (not (null the-node)))))
 
 (5am:test is-leaf
-  (let ((the-node (make-instance 'binary-tree-node)))
+  (let ((the-node (make-instance 'binary-node)))
     (5am:is (leaf? the-node))
     (setf (right the-node) 1)
     (5am:is (not (leaf? the-node)))
@@ -20,9 +20,9 @@
     (5am:is (not (leaf? the-node)))))
 
 (defun make-traversal-test-node ()
-  (let ((the-node (make-instance 'binary-tree-node :data "root data")))
-    (setf (left the-node) (make-instance 'binary-tree-node :data "left data"))
-    (setf (right the-node) (make-instance 'binary-tree-node :data "right data"))
+  (let ((the-node (make-instance 'binary-node :data "root data")))
+    (setf (left the-node) (make-instance 'binary-node :data "left data"))
+    (setf (right the-node) (make-instance 'binary-node :data "right data"))
     the-node))
 
 (defun add-to-vector (vec)
@@ -107,3 +107,29 @@
       (5am:is (string= (elt the-vector 1) "root data"))
       (5am:is (string= (elt the-vector 2) "right data")))))
 
+(5am:test right-and-left-root
+  (let* ((root-node (make-instance 'binary-node-with-parent :data 1)))
+    (5am:is (null (right? root-node)))
+    (5am:is (null (left? root-node)))))
+
+(5am:test right-and-left-parent
+  (let* ((the-tree (make-instance 'binary-tree-with-parent))
+         (root-node (insert-left the-tree nil 2))
+         (left-node (insert-left the-tree root-node 1))
+         (right-node (insert-right the-tree root-node 3)))
+    
+    (5am:is (eq (parent right-node) root-node))
+    (5am:is (eq (parent left-node) root-node))
+    (5am:is (right? right-node))
+    (5am:is (left? left-node))
+    (5am:is (null (left? right-node)))
+    (5am:is (null (right? left-node)))))
+
+(5am:test merge-the-trees-with-parents
+  (let* ((left-tree (make-instance 'binary-tree-with-parent))
+         (left-root (insert-left left-tree nil "left data"))
+         (right-tree (make-instance 'binary-tree-with-parent))
+         (right-root (insert-left right-tree nil "right data")))
+    (let ((tree (merge-trees left-tree right-tree "root data")))
+      (5am:is (eq (parent right-root) (root tree)))
+      (5am:is (eq (parent left-root) (root tree))))))
