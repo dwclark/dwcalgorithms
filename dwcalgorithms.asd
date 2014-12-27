@@ -1,11 +1,10 @@
-;;;; dwcalgorithms.asd
-
-(asdf:defsystem #:dwcalgorithms
+(asdf:defsystem dwcalgorithms
   :serial t
   :description "Simple algorithm package"
   :author "David Clark <david@psionicwave.com>"
   :license "Specify license here"
   :depends-on (#:cl-utilities)
+  :in-order-to ((asdf:test-op (asdf:test-op "dwcalgorithms/test")))
   :components ((:file "package")
                (:file "dwcalgorithms")
                (:file "util")
@@ -21,3 +20,33 @@
                (:file "heap")
                (:file "queue")))
 
+(defun run-all-tests ()
+  (loop 
+     for sym in (list (uiop:find-symbol* '#:sort-suite :dwcalgorithms)
+                      (uiop:find-symbol* '#:hash-suite :dwcalgorithms)
+                      (uiop:find-symbol* '#:heap-suite :dwcalgorithms)
+                      (uiop:find-symbol* '#:queue-suite :dwcalgorithms)
+                      (uiop:find-symbol* '#:search-suite :dwcalgorithms)
+                      (uiop:find-symbol* '#:stack-suite :dwcalgorithms)
+                      (uiop:find-symbol* '#:tree-suite :dwcalgorithms)
+                      (uiop:find-symbol* '#:util-suite :dwcalgorithms)
+                      (uiop:find-symbol* '#:binary-tree-suite :dwcalgorithms))
+     do (uiop:symbol-call :fiveam '#:run! sym)))
+
+(asdf:defsystem dwcalgorithms/test
+  :serial t
+  :description "Describe dwcalgorithms-test here"
+  :author "Your Name <your.name@example.com>"
+  :license "Specify license here"
+  :depends-on (#:fiveam #:dwcalgorithms)
+  :components ((:file "test/sort-test")
+               (:file "test/search-test")
+               (:file "test/hash-test")
+               (:file "test/tree-test")
+               (:file "test/stack-test")
+               (:file "test/util-test")
+               (:file "test/heap-test")
+               (:file "test/queue-test")
+               (:file "test/binary-tree-test"))
+  :perform (asdf:test-op (o s)
+                         (run-all-tests)))
