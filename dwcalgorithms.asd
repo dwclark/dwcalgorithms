@@ -2,10 +2,11 @@
   :serial t
   :description "Simple algorithm package"
   :author "David Clark <david@psionicwave.com>"
-  :license "Specify license here"
+  :license "Apache 2 License"
   :depends-on (#:cl-utilities)
   :in-order-to ((asdf:test-op (asdf:test-op "dwcalgorithms/test")))
   :components ((:file "package")
+               (:file "exceptions")
                (:file "dwcalgorithms")
                (:file "util")
                (:file "sort")
@@ -35,9 +36,9 @@
 
 (asdf:defsystem dwcalgorithms/test
   :serial t
-  :description "Describe dwcalgorithms-test here"
-  :author "Your Name <your.name@example.com>"
-  :license "Specify license here"
+  :description "Tests for dwcalgorithms"
+  :author "David Clark <your.name@example.com>"
+  :license "Apache 2 License"
   :depends-on (#:fiveam #:dwcalgorithms)
   :components ((:file "test/sort-test")
                (:file "test/search-test")
