@@ -262,6 +262,9 @@
 (defun add-list-to-tree (tree l)
   (loop for item in l do (insert tree item)))
 
+(defun delete-list-from-tree (tree l)
+  (loop for item in l do (delete tree item)))
+
 (5am:test binary-search-tree-delete-leaf
   (let ((left-leaning-tree (make-instance 'binary-search-tree))
         (right-leaning-tree (make-instance 'binary-search-tree))
@@ -300,3 +303,11 @@
     (delete tree 8)
     (in-order tree (add-to-vector vec))
     (5am:is (equalp vec (vector 2 4 5 7 10)))))
+
+(5am:test binary-search-tree-size
+  (let ((tree (make-instance 'binary-search-tree)))
+    (add-list-to-tree tree (list 5 2 7 9 1))
+    (5am:is (= 5 (size tree)))
+    
+    (delete-list-from-tree tree (list 1 2 5 7 9))
+    (5am:is (= 0 (size tree)))))

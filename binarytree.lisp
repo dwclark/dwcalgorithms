@@ -1,5 +1,12 @@
 (in-package #:dwcalgorithms)
 
+;;TODO
+;;1) Clean up return values
+;;2) Separate into files
+;;3) Re-vist inheritance hierarchy (mainly make sure contracts are obeyed as things are extended
+;;4) AVL balanced tree, finish it up
+;;5) Implement red/black tree for this interface
+
 (defclass binary-node ()
   ((data :initform nil :initarg :data :accessor data)
    (right :initform nil :initarg :right :accessor right)
@@ -180,7 +187,8 @@
        (if (not (null ,node))
            (setf (parent ,node) ,p-node))
        (if (not (null ,p-node))
-           (setf (,direction ,p-node) ,node)))))
+           (setf (,direction ,p-node) ,node))
+       ,node)))
 
 (defmethod remove-leaf-node ((node binary-node-with-parent))
   (with-accessors ((parent parent)) node
@@ -218,25 +226,18 @@
 (defmethod new-node ((tree binary-tree-with-parent) data)
   (make-instance (node-type tree) :data data))
 
-(defmacro set-my-parent (node the-parent)
-  (once-only (node the-parent)
-    `(progn
-       (if (not (null ,node))
-           (setf (parent ,node) ,the-parent))
-       ,node)))
-
 (defmethod insert-left ((tree binary-tree-with-parent) node data)
-  (set-my-parent (call-next-method) node))
+  (link-on left (call-next-method) node))
 
 (defmethod insert-right ((tree binary-tree-with-parent) node data)
-  (set-my-parent (call-next-method) node))
+  (link-on right (call-next-method) node))
 
 (defmethod merge-trees ((left-tree binary-tree-with-parent) (right-tree binary-tree-with-parent) data)
   (let* ((left-root (root left-tree))
          (right-root (root right-tree))
          (new-tree (call-next-method)))
-    (set-my-parent left-root (root new-tree))
-    (set-my-parent right-root (root new-tree))
+    (link-on left left-root (root new-tree))
+    (link-on right right-root (root new-tree))
     new-tree))
 
 (defmacro direction-rotate (the-direction tree x other-direction)
@@ -247,19 +248,17 @@
          (let* ((,permanent-root (parent ,x))
                 (,y (,other-direction ,x))
                 (,beta (,the-direction ,y)))
-
-           ;;process y's child and parent
-           (setf (,the-direction ,y) ,x)
-           (set-my-parent ,y ,permanent-root)
-           (if (null ,permanent-root)
-               (setf (root ,tree) ,y))
-
-           ;;process x's child and parent
-           (setf (,other-direction ,x) ,beta)
-           (set-my-parent ,x ,y)
            
-           ;;process beta's new parent if necessary
-           (set-my-parent ,beta ,x))))))
+           (cond
+             ((null ,permanent-root)
+              (setf (root ,tree) ,y))
+             ((right? ,x)
+              (link-on right ,y ,permanent-root))
+             (t
+              (link-on left ,y ,permanent-root)))
+           
+           (link-on ,the-direction ,x ,y)
+           (link-on ,other-direction ,beta ,x))))))
 
 (defmethod left-rotate ((tree binary-tree-with-parent) (x binary-node-with-parent))
   (direction-rotate left tree x right))
@@ -402,6 +401,7 @@
               (clear tree)
               (values nil nil))
             (multiple-value-bind (ret-node direction) (remove-node point)
+              (decf (size tree))
               (if (root? ret-node)
                   (setf (root tree) ret-node))
               (values ret-node direction)))
