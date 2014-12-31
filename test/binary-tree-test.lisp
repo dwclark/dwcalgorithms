@@ -135,38 +135,37 @@
       (5am:is (eq (parent left-root) (root tree))))))
 
 (5am:test correctly-rotates
-  (let* ((tree (make-instance 'binary-tree-with-parent))
-         (node (insert-left tree nil "stuff")))
-    (5am:signals simple-error (right-rotate tree node))
-    (5am:signals simple-error (left-rotate tree node))))
+  (let* ((node (make-instance 'binary-node-with-parent :data 5)))
+    (5am:signals simple-error (right-rotate-node node))
+    (5am:signals simple-error (left-rotate-node node))))
 
-(5am:test right-rotation
-  (let* ((tree (make-instance 'binary-tree-with-parent))
-         (one (insert-right tree nil 1))
-         (two (insert-right tree one 2))
+(5am:test right-rotate-node
+  (let* ((one (make-instance 'binary-node-with-parent :data 1))
+         (two (make-instance 'binary-node-with-parent :data 2))
+         (three (make-instance 'binary-node-with-parent :data 3))
+         (before-vector (make-array 3 :adjustable t :fill-pointer 0))
+         (after-vector (make-array 3 :adjustable t :fill-pointer 0)))
+    
+    (link-on right two one)
+    (link-on right two three)
+    (in-order one (add-to-vector before-vector))
+    (left-rotate-node one)
+    (in-order two (add-to-vector after-vector))
+    (5am:is (equalp before-vector after-vector))))
+
+(5am:test left-rotate-node
+  (let* ((one (make-instance 'binary-node-with-parent :data 1))
+         (two (make-instance 'binary-node-with-parent :data 2))
+         (three (make-instance 'binary-node-with-parent :data 3))
          (before-vector (make-array 3 :adjustable t :fill-pointer 0))
          (after-vector (make-array 3 :adjustable t :fill-pointer 0)))
 
-    (insert-right tree two 3)
-    (in-order tree (add-to-vector before-vector))
-    (left-rotate tree one)
-    (in-order tree (add-to-vector after-vector))
-    (5am:is (equalp before-vector after-vector))
-    (5am:is (eq (root tree) two))))
-
-(5am:test left-rotation
-  (let* ((tree (make-instance 'binary-tree-with-parent))
-         (three (insert-left tree nil 3))
-         (two (insert-left tree three 2))
-         (before-vector (make-array 3 :adjustable t :fill-pointer 0))
-         (after-vector (make-array 3 :adjustable t :fill-pointer 0)))
-
-    (insert-left tree two 1)
-    (in-order tree (add-to-vector before-vector))
-    (right-rotate tree three)
-    (in-order tree (add-to-vector after-vector))
-    (5am:is (equalp before-vector after-vector))
-    (5am:is (eq (root tree) two))))
+    (link-on left two three)
+    (link-on left one two)
+    (in-order three (add-to-vector before-vector))
+    (right-rotate-node three)
+    (in-order two (add-to-vector after-vector))
+    (5am:is (equalp before-vector after-vector))))
 
 (5am:test compute-balance-factors-balanced
   (let* ((tree (make-instance 'avl-tree))
@@ -180,24 +179,22 @@
 
 (5am:test compute-balance-factors-left-unbalanced
   (let* ((tree (make-instance 'avl-tree))
-         (three (insert-left tree nil -3))
-         (two (insert-left tree three -2))
+         (two (insert-left tree nil -2))
          (one (insert-left tree two -1))
          (zero (insert-left tree one 0)))
 
     (loop
-       for node in (list three two one zero)
+       for node in (list two one zero)
        do (5am:is (= (data node) (balance-factor node))))))
 
 (5am:test compute-balance-factors-right-unbalanced
   (let* ((tree (make-instance 'avl-tree))
-         (three (insert-right tree nil 3))
-         (two (insert-right tree three 2))
+         (two (insert-right tree nil 2))
          (one (insert-right tree two 1))
          (zero (insert-right tree one 0)))
 
     (loop
-       for node in (list three two one zero)
+       for node in (list two one zero)
        do (5am:is (= (data node) (balance-factor node))))))
     
 (5am:test insert-binary-search-tree

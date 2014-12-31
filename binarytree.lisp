@@ -164,6 +164,8 @@
 (defgeneric remove-node (node))
 (defgeneric remove-leaf-node (node))
 (defgeneric remove-single-child-node (node))
+(defgeneric left-rotate-node (node))
+(defgeneric right-rotate-node (node))
 
 (defmacro direction? (node direction-func)
   `(with-accessors ((parent parent)) node
@@ -220,6 +222,28 @@
           (remove-leaf-node node)
           (remove-single-child-node node)))))
 
+(defmacro direction-rotate (the-direction x other-direction)
+  (with-unique-names (permanent-root y beta)
+    `(progn
+       (assert (not (null (,other-direction ,x))))
+       (let* ((,permanent-root (parent ,x))
+              (,y (,other-direction ,x))
+              (,beta (,the-direction ,y)))
+         
+         (if (right? ,x)
+             (link-on right ,y ,permanent-root)
+             (link-on left ,y ,permanent-root))
+         
+         (link-on ,the-direction ,x ,y)
+         (link-on ,other-direction ,beta ,x)
+         (values ,y ,x))))) ;return new root and new child
+
+(defmethod left-rotate-node ((x binary-node-with-parent))
+  (direction-rotate left x right))
+
+(defmethod right-rotate-node ((x binary-node-with-parent))
+  (direction-rotate right x left))
+
 (defclass binary-tree-with-parent (binary-tree)
   ((node-type :initform 'binary-node-with-parent :reader node-type :allocation :class)))
 
@@ -239,32 +263,6 @@
     (link-on left left-root (root new-tree))
     (link-on right right-root (root new-tree))
     new-tree))
-
-(defmacro direction-rotate (the-direction tree x other-direction)
-  (once-only (tree x)
-    (with-unique-names (permanent-root y beta)
-      `(progn
-         (assert (not (null (,other-direction ,x))))
-         (let* ((,permanent-root (parent ,x))
-                (,y (,other-direction ,x))
-                (,beta (,the-direction ,y)))
-           
-           (cond
-             ((null ,permanent-root)
-              (setf (root ,tree) ,y))
-             ((right? ,x)
-              (link-on right ,y ,permanent-root))
-             (t
-              (link-on left ,y ,permanent-root)))
-           
-           (link-on ,the-direction ,x ,y)
-           (link-on ,other-direction ,beta ,x))))))
-
-(defmethod left-rotate ((tree binary-tree-with-parent) (x binary-node-with-parent))
-  (direction-rotate left tree x right))
-
-(defmethod right-rotate ((tree binary-tree-with-parent) (x binary-node-with-parent))
-  (direction-rotate right tree x left))
 
 (defclass binary-search-node (binary-node-with-parent) ())
 
@@ -313,7 +311,7 @@
           (call-next-method next)))))
 
 (defclass binary-search-tree (binary-tree-with-parent)
-  ((node-type :initform 'avl-node :reader node-type :allocation :class)
+  ((node-type :initform 'binary-search-node :reader node-type :allocation :class)
    (cmp :initform #'<=> :initarg :cmp :reader cmp)))
 
 (defmethod new-node ((tree binary-search-tree) data)
@@ -409,20 +407,44 @@
 
 ;; AVL Nodes and Trees
 (defclass avl-node (binary-search-node)
-  ((balance-factor :initform 0 :accessor balance-factor)))
+  ((height :initform 1 :accessor height)))
 
-(defgeneric compute-balance-factors (node))
+(defun left-height (the-avl-node)
+  (if (not (null (left the-avl-node)))
+      (height (left the-avl-node))
+      0))
 
-(defmethod compute-balance-factors ((node avl-node))
-  (with-accessors ((parent parent)) node
-    (if (not (null parent))
-        (with-accessors ((balance-factor balance-factor)) parent
+(defun right-height (the-avl-node)
+  (if (not (null (right the-avl-node)))
+      (height (right the-avl-node))
+      0))
+
+(defun balance-factor (the-avl-node)
+  (- (right-height the-avl-node) (left-height the-avl-node)))
+
+(defun recompute-height (node)
+  (with-accessors ((height height)) node
+    (let ((prev height))
+      (setf height (1+ (max (left-height node) (right-height node))))
+      (not (= prev height)))))
+
+(defun rebalance-insertion (node))
+  
+(defun compute-and-rebalance-insertion (node)
+  (let ((changed (recompute-height node)))
+    (if changed
+        (let ((bf (abs (balance-factor node))))
           (cond
-            ((left? node) (decf balance-factor))
-            ((right? node) (incf balance-factor)))
-          
-          (cond
-            ((not (= 0 balance-factor)) (compute-balance-factors parent)))))))
+            ((= 0 bf) nil) ;return nothing, 
+            
+            ((= 1 bf)
+             (if (not (null (parent node)))
+                 (compute-and-rebalance-insertion (parent node))
+                 nil))
+            
+            ((= 2 bf)
+             (rebalance-insertion node))))
+        nil)))
 
 (defclass avl-tree (binary-search-tree)
   ((node-type :initform 'avl-node :reader node-type :allocation :class)
@@ -433,12 +455,14 @@
 
 (defmethod insert-left ((tree avl-tree) node data)
   (let ((new-node (call-next-method)))
-    (compute-balance-factors new-node)
+    (if (not (null node))
+        (compute-and-rebalance-insertion node))
     new-node))
 
 (defmethod insert-right ((tree avl-tree) node data)
   (let ((new-node (call-next-method)))
-    (compute-balance-factors new-node)
+    (if (not (null node))
+        (compute-and-rebalance-insertion node))
     new-node))
 
 (defmethod merge-trees ((left-tree avl-tree) (right-tree avl-tree) data)
