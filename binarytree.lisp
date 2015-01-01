@@ -208,7 +208,6 @@
        ,node)))
 
 (defmethod remove-leaf-node ((node binary-node-with-parent))
-  (format t "In remove-leaf-node, node data: ~A~%" (data node))
   (with-accessors ((parent parent)) node
     (cond
       ((left? node)
@@ -216,11 +215,9 @@
        parent)
       ((right? node)
        (link-on right nil parent)
-       (format t "in remove-leaf-node parent data: ~A, parent right: ~A~%" (data parent) (right parent))
        parent))))
 
 (defmethod remove-single-child-node ((node binary-node-with-parent))
-  (format t "In remove-single-child-node, node data: ~A~%" (data node))
   (with-accessors ((parent parent)) node
     (cond
       ((not (null (left node)))
@@ -436,8 +433,6 @@
           
               ;;not root case
               (let ((parent-of-deleted (remove-node point)))
-                (format t "Removing either non-root or root with more than one child~%")
-                (format t "parent-of-deleted ~A~%" (data parent-of-deleted))
                 (decf (size tree))
                 (if (root? parent-of-deleted)
                     (setf (root tree) parent-of-deleted))
@@ -449,14 +444,12 @@
   ((height :initform 1 :accessor height)))
 
 (defmethod left-rotate-node ((x avl-node))
-  (format t "In avl-node::left-rotate-node~%")
   (multiple-value-bind (upper lower) (call-next-method)
     (recompute-height lower)
     (recompute-height upper)
     (values upper lower)))
 
 (defmethod right-rotate-node ((x avl-node))
-  (format t "In avl-node::right-rotate-node~%")
   (multiple-value-bind (upper lower) (call-next-method)
     (recompute-height lower)
     (recompute-height upper)
@@ -509,7 +502,7 @@
                          (progn
                            (right-rotate-node tallest-sub-node)
                            (left-rotate-node node)))
-                     (if (<= 0 sub-imbalance)
+                     (if (<= sub-imbalance 0)
                          (right-rotate-node node)
                          (progn
                            (left-rotate-node tallest-sub-node)
@@ -518,14 +511,10 @@
       (if (root? upper)
           (setf (root tree) upper))
       upper)))
-      
 
 (defun compute-and-rebalance-insert (tree node)
-  (format t "In compute-and-rebalance-insert~%")
-  
   (if (not (null node))
       (let ((changed (recompute-height node)))
-        (format t "In compute-and-rebalance-insert node ~A, changed ~A~%" (data node) changed)
         (if changed
             (let ((bf (abs (balance-factor node))))
               (cond
@@ -541,8 +530,6 @@
       nil))
 
 (defun compute-and-rebalance-delete (tree node)
-  (format t "In compute-and-rebalance-delete~%")
-  
   (if (not (null node))
       (progn
         (recompute-height node)

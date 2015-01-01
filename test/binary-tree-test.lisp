@@ -167,36 +167,6 @@
     (in-order two (add-to-vector after-vector))
     (5am:is (equalp before-vector after-vector))))
 
-(5am:test compute-balance-factors-balanced
-  (let* ((tree (make-instance 'avl-tree))
-         (root (insert-left tree nil 2))
-         (the-left (insert-left tree root 1))
-         (the-right (insert-right tree root 3)))
-
-    (loop 
-       for node in (list root the-left the-right)
-       do (5am:is (= 0 (balance-factor node))))))
-
-;; (5am:test compute-balance-factors-left-unbalanced
-;;   (let* ((tree (make-instance 'avl-tree))
-;;          (two (insert-left tree nil -2))
-;;          (one (insert-left tree two -1))
-;;          (zero (insert-left tree one 0)))
-
-;;     (loop
-;;        for node in (list two one zero)
-;;        do (5am:is (= (data node) (balance-factor node))))))
-
-;; (5am:test compute-balance-factors-right-unbalanced
-;;   (let* ((tree (make-instance 'avl-tree))
-;;          (two (insert-right tree nil 2))
-;;          (one (insert-right tree two 1))
-;;          (zero (insert-right tree one 0)))
-
-;;     (loop
-;;        for node in (list two one zero)
-;;        do (5am:is (= (data node) (balance-factor node))))))
-    
 (5am:test insert-binary-search-tree
   (let ((tree (make-instance 'binary-search-tree))
         (vec (make-array 6 :adjustable t :fill-pointer 0)))
@@ -273,8 +243,8 @@
   (let ((left-leaning-tree (make-instance 'binary-search-tree))
         (right-leaning-tree (make-instance 'binary-search-tree))
         (vec (make-array 6 :adjustable t :fill-pointer 0)))
-    (add-list-to-tree left-leaning-tree (list 2 1))
-    (add-list-to-tree right-leaning-tree (list 2 3))
+    (loop for i in (list 2 1) do (insert left-leaning-tree i))
+    (loop for i in (list 2 3) do (insert right-leaning-tree i))
     (delete left-leaning-tree 1)
     (delete right-leaning-tree 3)
     
@@ -288,7 +258,7 @@
 (5am:test binary-search-tree-delete-single-child-node
   (let ((tree (make-instance 'binary-search-tree))
         (vec (make-array 6 :adjustable t :fill-pointer 0)))
-    (add-list-to-tree tree (list 5 8 10))
+    (loop for i in (list 5 8 10) do (insert tree i))
     
     (delete tree 8)
     (in-order tree (add-to-vector vec))
@@ -297,22 +267,35 @@
 (5am:test binary-search-tree-double-child-node
   (let ((tree (make-instance 'binary-search-tree))
         (vec (make-array 6 :adjustable t :fill-pointer 0)))
-    (add-list-to-tree tree (list 5 3 8 2 4 7 10))
+    (loop for i in (list 5 3 8 2 4 7 10) do (insert tree i))
     
     (delete tree 3)
     (in-order tree (add-to-vector vec))
-    (pre-order-node (root tree) #'display-tree)
     (5am:is (equalp vec (vector 2 4 5 7 8 10)))
 
     (setf (fill-pointer vec) 0)
     (delete tree 8)
-    (pre-order-node (root tree) #'display-tree)
     (in-order tree (add-to-vector vec))
     (5am:is (equalp vec (vector 2 4 5 7 10)))))
 
+(5am:test basic-binary-search-delete-three-nodes
+  (let ((tree (make-instance 'binary-search-tree)))
+    (loop for i in (list 2 3 1) do (insert tree i))
+    (delete tree 3)
+    (5am:is (= 2 (size tree)))
+    (5am:is (= 2 (data (root tree))))
+    
+    (delete tree 2)
+    (5am:is (= 1 (size tree)))
+    (5am:is (= 1 (data (root tree))))
+
+    (delete tree 1)
+    (5am:is (= 0 (size tree)))
+    (5am:is (null (root tree)))))
+
 (5am:test binary-search-tree-size
   (let ((tree (make-instance 'binary-search-tree)))
-    (add-list-to-tree tree (list 5 2 7 9 1))
+    (loop for i in (list 5 2 7 9 1) do (insert tree i))
     (5am:is (= 5 (size tree)))
 
     (delete tree 1)
@@ -335,22 +318,29 @@
 
 (5am:test basic-avl-rebalance
   (let ((tree (make-instance 'avl-tree)))
-    (add-list-to-tree tree (list 1 2 3))
+    (loop for i in (list 1 2 3) do (insert tree i))
     (5am:is (= 2 (height (root tree))))
-    (add-list-to-tree tree (list 4 5 6 7))
+    (loop for i in (list 4 5 6 7) do (insert tree i))
     (5am:is (= 3 (height (root tree))))
     (5am:is (= 4 (data (root tree))))))
 
+(5am:test avl-lots-of-insertions
+  (let ((tree (make-instance 'avl-tree)))
+    (loop for i from 1 to 15 do (insert tree i))
+    (5am:is (= 4 (height (root tree))))
+    (5am:is (= 8 (data (root tree))))
+    (5am:is (= 15 (data (right (right (right (root tree)))))))))
+
 (5am:test basic-double-rotations
   (let ((tree (make-instance 'avl-tree)))
-    (add-list-to-tree tree (list 5 7 6))
+    (loop for i in (list 5 7 6) do (insert tree i))
     (5am:is (= 2 (height (root tree))))
     (5am:is (= 6 (data (root tree))))))
 
-(5am:test basic-avl-delete
+(5am:test avl-unique-delete-right-case
   (let ((tree (make-instance 'avl-tree)))
-    (add-list-to-tree tree (list 1 2 3 4 5 6 7))
-    (delete-list-from-tree tree (list 7 6 5))
+    (loop for i in (list 1 2 3 4 5 6 7) do (insert tree i))
+    (loop for i in (list 7 6 5) do (delete tree i))
     (5am:is (= 4 (size tree)))
     (5am:is (= 2 (data (root tree))))
     (delete tree 2)
@@ -366,18 +356,44 @@
     (5am:is (= 0 (size tree)))
     (5am:is (null (root tree)))))
 
-(5am:test basic-binary-search-delete-three-nodes
-  (let ((tree (make-instance 'binary-search-tree)))
-    (add-list-to-tree tree (list 2 3 1))
-    (pre-order-node (root tree) #'display-tree)
-    (delete tree 3)
-    (5am:is (= 2 (size tree)))
-    (5am:is (= 2 (data (root tree))))
-    
-    (delete tree 2)
-    (5am:is (= 1 (size tree)))
-    (5am:is (= 1 (data (root tree))))
+(5am:test avl-unique-delete-left-case
+  (let ((tree (make-instance 'avl-tree))
+        (the-vector (make-array 4 :adjustable t :fill-pointer 0)))
+    (loop for i in (list 1 2 3 4 5 6 7) do (insert tree i))
+    (loop for i in (list 2 1 3) do (delete tree i))
+    (5am:is (= 3 (height (root tree))))
+    (5am:is (= 6 (data (root tree))))
+    (in-order tree (add-to-vector the-vector))
+    (5am:is (equalp (vector 4 5 6 7) the-vector))))
 
-    (delete tree 1)
-    (5am:is (= 0 (size tree)))
-    (5am:is (null (root tree)))))
+(5am:test test-more-avl-deletions
+  (let ((tree (make-instance 'avl-tree)))
+    (loop for i in (list 10 5 20 3 7 15 25) do (insert tree i))
+    (loop for i in (list 3 7 25 5) do (delete tree i))
+    (5am:is (= 3 (size tree)))
+    (5am:is (= 15 (data (root tree))))
+    (5am:is (= 10 (data (left (root tree)))))
+    (5am:is (= 20 (data (right (root tree)))))))
+
+(5am:test test-all-basic-avl-insertons
+  (labels
+      ((test-now-balanced (tree)
+         (5am:is (= 2 (data (root tree))))
+         (5am:is (= 2 (height (root tree))))
+         (5am:is (= 1 (data (left (root tree)))))
+         (5am:is (= 3 (data (right (root tree)))))))
+    (let ((tree (make-instance 'avl-tree)))
+      ;;test right-right leaning
+      (test-now-balanced (loop for i in (list 1 2 3) do (insert tree i) finally (return tree)))
+      (clear tree)
+
+      ;; test right-left leaning
+      (test-now-balanced (loop for i in (list 1 3 2) do (insert tree i) finally (return tree)))
+      (clear tree)
+
+      ;;test left-left leaning
+      (test-now-balanced (loop for i in (list 3 2 1) do (insert tree i) finally (return tree)))
+      (clear tree)
+      
+      ;;test left-right leaning
+      (test-now-balanced (loop for i in (list 3 1 2) do (insert tree i) finally (return tree))))))
