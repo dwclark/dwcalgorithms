@@ -28,6 +28,21 @@
   (and (null (right node))
        (null (left node))))
 
+(defun pre-order-node (node proc)
+  (labels
+      ((inner (node)
+         (if (not (null node))
+             (progn
+               (funcall proc node)
+               
+               (if (not (null (left node)))
+                   (inner (left node)))
+
+               (if (not (null (right node)))
+                   (inner (right node)))))))
+    (inner node)))
+
+
 (defmethod pre-order ((node binary-node) proc)
   (labels
       ((inner (node)
@@ -193,56 +208,63 @@
        ,node)))
 
 (defmethod remove-leaf-node ((node binary-node-with-parent))
+  (format t "In remove-leaf-node, node data: ~A~%" (data node))
   (with-accessors ((parent parent)) node
     (cond
       ((left? node)
        (link-on left nil parent)
-       (values parent :left))
+       parent)
       ((right? node)
        (link-on right nil parent)
-       (values parent :right)))))
+       (format t "in remove-leaf-node parent data: ~A, parent right: ~A~%" (data parent) (right parent))
+       parent))))
 
 (defmethod remove-single-child-node ((node binary-node-with-parent))
+  (format t "In remove-single-child-node, node data: ~A~%" (data node))
   (with-accessors ((parent parent)) node
     (cond
       ((not (null (left node)))
-       (link-on left (left node) parent)
-       (values (left node) :left))
+       (if (right? node)
+           (link-on right (left node) parent)
+           (link-on left (left node) parent))
+       parent)
       
       ((not (null (right node)))
-       (link-on right (right node) parent)
-       (values (right node) :right)))))
+       (if (right? node)
+           (link-on right (right node) parent)
+           (link-on left (right node) parent))
+       parent))))
 
 (defmethod remove-node ((node binary-node-with-parent))
-  (with-accessors ((parent parent)) node
-    (let ((children (number-of-children node)))
-      (assert (< children 2))
-      
-      (if (= 0 children)
-          (remove-leaf-node node)
-          (remove-single-child-node node)))))
+  (let ((children (number-of-children node)))
+    (assert (< children 2))
+    
+    (if (= 0 children)
+        (remove-leaf-node node)
+        (remove-single-child-node node))))
 
-(defmacro direction-rotate (the-direction x other-direction)
+(defmacro direction-rotate (the-direction x)
   (with-unique-names (permanent-root y beta)
-    `(progn
-       (assert (not (null (,other-direction ,x))))
-       (let* ((,permanent-root (parent ,x))
-              (,y (,other-direction ,x))
-              (,beta (,the-direction ,y)))
-         
-         (if (right? ,x)
-             (link-on right ,y ,permanent-root)
-             (link-on left ,y ,permanent-root))
-         
-         (link-on ,the-direction ,x ,y)
-         (link-on ,other-direction ,beta ,x)
-         (values ,y ,x))))) ;return new root and new child
+    (let ((func (if (eq the-direction 'right) 'left 'right)))
+      `(progn
+         (assert (not (null (,func ,x))))
+         (let* ((,permanent-root (parent ,x))
+                (,y (,func ,x))
+                (,beta (,the-direction ,y)))
+           
+           (if (right? ,x)
+               (link-on right ,y ,permanent-root)
+               (link-on left ,y ,permanent-root))
+           
+           (link-on ,the-direction ,x ,y)
+           (link-on ,func ,beta ,x)
+           (values ,y ,x))))))
 
 (defmethod left-rotate-node ((x binary-node-with-parent))
-  (direction-rotate left x right))
+  (direction-rotate left x))
 
 (defmethod right-rotate-node ((x binary-node-with-parent))
-  (direction-rotate right x left))
+  (direction-rotate right x))
 
 (defclass binary-tree-with-parent (binary-tree)
   ((node-type :initform 'binary-node-with-parent :reader node-type :allocation :class)))
@@ -281,25 +303,26 @@
 (defmethod maximum ((node binary-search-node))
   (extreme right node))
 
-(defmacro one-node-to-the (func node other-func)
+(defmacro one-node-to-the (the-direction node)
   (once-only (node)
     (with-unique-names (x y)
-      `(if (not (null (,func ,node)))
-           (extreme ,other-func (,func ,node))
-           (let ((,y (parent ,node))
-                 (,x ,node))
-             (loop
-                while (and (not (null ,y)) (eq ,x (,func ,y)))
-                do (progn
-                     (setf ,x ,y)
-                     (setf ,y (parent ,y)))
-                finally (return ,y)))))))
+      (let ((other-direction (if (eq the-direction 'right) 'left 'right)))
+        `(if (not (null (,the-direction ,node)))
+             (extreme ,other-direction (,the-direction ,node))
+             (let ((,y (parent ,node))
+                   (,x ,node))
+               (loop
+                  while (and (not (null ,y)) (eq ,x (,the-direction ,y)))
+                  do (progn
+                       (setf ,x ,y)
+                       (setf ,y (parent ,y)))
+                  finally (return ,y))))))))
 
 (defmethod next-node ((node binary-search-node))
-  (one-node-to-the right node left))
+  (one-node-to-the right node))
 
 (defmethod previous-node ((node binary-search-node))
-  (one-node-to-the left node right))
+  (one-node-to-the left node))
 
 (defmethod remove-node ((node binary-search-node))
   (let ((children (number-of-children node)))
@@ -394,20 +417,50 @@
 (defmethod delete ((tree binary-search-tree) val)
   (multiple-value-bind (point func) (find-insertion-point tree val)
     (if (not (null point))
-        (if (and (root? point) (= 0 (number-of-children point)))
-            (progn
-              (clear tree)
-              (values nil nil))
-            (multiple-value-bind (ret-node direction) (remove-node point)
-              (decf (size tree))
-              (if (root? ret-node)
-                  (setf (root tree) ret-node))
-              (values ret-node direction)))
-        (values nil nil))))
+        ;;case where we have something to delete
+        (progn
+          ;;handle the root differently
+          (if (and (root? point) (< (number-of-children point) 2))
+              (progn
+                (if (= 0 (number-of-children point))
+                    ;;root has no children, will be empty tree
+                    (progn
+                      (clear tree)
+                      nil)
+                    ;;root has one child, it will become the root
+                    (let ((other (if (not (null (left point))) (left point) (right point))))
+                      (remove-node point)
+                      (decf (size tree))
+                      (setf (root tree) other)
+                      other)))
+          
+              ;;not root case
+              (let ((parent-of-deleted (remove-node point)))
+                (format t "Removing either non-root or root with more than one child~%")
+                (format t "parent-of-deleted ~A~%" (data parent-of-deleted))
+                (decf (size tree))
+                (if (root? parent-of-deleted)
+                    (setf (root tree) parent-of-deleted))
+                parent-of-deleted)))
+        nil)))
 
 ;; AVL Nodes and Trees
 (defclass avl-node (binary-search-node)
   ((height :initform 1 :accessor height)))
+
+(defmethod left-rotate-node ((x avl-node))
+  (format t "In avl-node::left-rotate-node~%")
+  (multiple-value-bind (upper lower) (call-next-method)
+    (recompute-height lower)
+    (recompute-height upper)
+    (values upper lower)))
+
+(defmethod right-rotate-node ((x avl-node))
+  (format t "In avl-node::right-rotate-node~%")
+  (multiple-value-bind (upper lower) (call-next-method)
+    (recompute-height lower)
+    (recompute-height upper)
+    (values upper lower)))
 
 (defun left-height (the-avl-node)
   (if (not (null (left the-avl-node)))
@@ -419,6 +472,20 @@
       (height (right the-avl-node))
       0))
 
+(defun taller-side (the-avl-node)
+  (let ((the-left (left-height the-avl-node))
+        (the-right (right-height the-avl-node)))
+    (cond
+      ((and (not (null (left the-avl-node)))
+            (> the-left the-right))
+       (left the-avl-node))
+      
+      ((and (not (null (right the-avl-node)))
+            (> the-right the-left))
+       (right the-avl-node))
+      
+      (t nil))))
+
 (defun balance-factor (the-avl-node)
   (- (right-height the-avl-node) (left-height the-avl-node)))
 
@@ -428,23 +495,62 @@
       (setf height (1+ (max (left-height node) (right-height node))))
       (not (= prev height)))))
 
-(defun rebalance-insertion (node))
+(defun perform-rotations (tree node)
+  (let* ((tallest-sub-node (taller-side node))
+         (top-imbalance (balance-factor node))
+         (sub-imbalance (balance-factor tallest-sub-node)))
+    
+    (if (not (= 2 (abs top-imbalance)))
+        (error 'illegal-state :message "All rotations should start with +2 or -2 imbalances"))
+    
+    (let ((upper (if (= 2 top-imbalance)
+                     (if (>= sub-imbalance 0)
+                         (left-rotate-node node)
+                         (progn
+                           (right-rotate-node tallest-sub-node)
+                           (left-rotate-node node)))
+                     (if (<= 0 sub-imbalance)
+                         (right-rotate-node node)
+                         (progn
+                           (left-rotate-node tallest-sub-node)
+                           (right-rotate-node node))))))
+
+      (if (root? upper)
+          (setf (root tree) upper))
+      upper)))
+      
+
+(defun compute-and-rebalance-insert (tree node)
+  (format t "In compute-and-rebalance-insert~%")
   
-(defun compute-and-rebalance-insertion (node)
-  (let ((changed (recompute-height node)))
-    (if changed
+  (if (not (null node))
+      (let ((changed (recompute-height node)))
+        (format t "In compute-and-rebalance-insert node ~A, changed ~A~%" (data node) changed)
+        (if changed
+            (let ((bf (abs (balance-factor node))))
+              (cond
+                ((= 0 bf) nil) ;return nothing, 
+                
+                ((= 1 bf)
+                 (if (not (null (parent node)))
+                     (compute-and-rebalance-insert tree (parent node))))
+                
+                ((= 2 bf)
+                 (compute-and-rebalance-insert tree (perform-rotations tree node)))))
+            nil))
+      nil))
+
+(defun compute-and-rebalance-delete (tree node)
+  (format t "In compute-and-rebalance-delete~%")
+  
+  (if (not (null node))
+      (progn
+        (recompute-height node)
         (let ((bf (abs (balance-factor node))))
-          (cond
-            ((= 0 bf) nil) ;return nothing, 
-            
-            ((= 1 bf)
-             (if (not (null (parent node)))
-                 (compute-and-rebalance-insertion (parent node))
-                 nil))
-            
-            ((= 2 bf)
-             (rebalance-insertion node))))
-        nil)))
+          (if (= 2 bf)
+              (compute-and-rebalance-delete tree (perform-rotations tree node))
+              (compute-and-rebalance-delete tree (parent node)))))
+      nil))
 
 (defclass avl-tree (binary-search-tree)
   ((node-type :initform 'avl-node :reader node-type :allocation :class)
@@ -453,17 +559,15 @@
 (defmethod new-node ((tree avl-tree) data)
   (make-instance (node-type tree) :data data))
 
-(defmethod insert-left ((tree avl-tree) node data)
+(defmethod insert ((tree avl-tree) val)
   (let ((new-node (call-next-method)))
-    (if (not (null node))
-        (compute-and-rebalance-insertion node))
+    (compute-and-rebalance-insert tree (parent new-node))
     new-node))
 
-(defmethod insert-right ((tree avl-tree) node data)
-  (let ((new-node (call-next-method)))
-    (if (not (null node))
-        (compute-and-rebalance-insertion node))
-    new-node))
+(defmethod delete ((tree avl-tree) val)
+  (let ((parent-of-deleted (call-next-method)))
+    (compute-and-rebalance-delete tree parent-of-deleted)
+    parent-of-deleted))
 
 (defmethod merge-trees ((left-tree avl-tree) (right-tree avl-tree) data)
   (error 'unsupported-operation :message "It is not possible to merge avl trees efficiently"))

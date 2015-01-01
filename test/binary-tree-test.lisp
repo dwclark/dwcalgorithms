@@ -177,25 +177,25 @@
        for node in (list root the-left the-right)
        do (5am:is (= 0 (balance-factor node))))))
 
-(5am:test compute-balance-factors-left-unbalanced
-  (let* ((tree (make-instance 'avl-tree))
-         (two (insert-left tree nil -2))
-         (one (insert-left tree two -1))
-         (zero (insert-left tree one 0)))
+;; (5am:test compute-balance-factors-left-unbalanced
+;;   (let* ((tree (make-instance 'avl-tree))
+;;          (two (insert-left tree nil -2))
+;;          (one (insert-left tree two -1))
+;;          (zero (insert-left tree one 0)))
 
-    (loop
-       for node in (list two one zero)
-       do (5am:is (= (data node) (balance-factor node))))))
+;;     (loop
+;;        for node in (list two one zero)
+;;        do (5am:is (= (data node) (balance-factor node))))))
 
-(5am:test compute-balance-factors-right-unbalanced
-  (let* ((tree (make-instance 'avl-tree))
-         (two (insert-right tree nil 2))
-         (one (insert-right tree two 1))
-         (zero (insert-right tree one 0)))
+;; (5am:test compute-balance-factors-right-unbalanced
+;;   (let* ((tree (make-instance 'avl-tree))
+;;          (two (insert-right tree nil 2))
+;;          (one (insert-right tree two 1))
+;;          (zero (insert-right tree one 0)))
 
-    (loop
-       for node in (list two one zero)
-       do (5am:is (= (data node) (balance-factor node))))))
+;;     (loop
+;;        for node in (list two one zero)
+;;        do (5am:is (= (data node) (balance-factor node))))))
     
 (5am:test insert-binary-search-tree
   (let ((tree (make-instance 'binary-search-tree))
@@ -262,6 +262,13 @@
 (defun delete-list-from-tree (tree l)
   (loop for item in l do (delete tree item)))
 
+(defun display-tree (node)
+  (format t "Node Data: ~A, Node Parent: ~A~%"
+          (data node) 
+          (if (not (null (parent node))) 
+              (data (parent node))
+              nil)))
+
 (5am:test binary-search-tree-delete-leaf
   (let ((left-leaning-tree (make-instance 'binary-search-tree))
         (right-leaning-tree (make-instance 'binary-search-tree))
@@ -294,10 +301,12 @@
     
     (delete tree 3)
     (in-order tree (add-to-vector vec))
+    (pre-order-node (root tree) #'display-tree)
     (5am:is (equalp vec (vector 2 4 5 7 8 10)))
 
     (setf (fill-pointer vec) 0)
     (delete tree 8)
+    (pre-order-node (root tree) #'display-tree)
     (in-order tree (add-to-vector vec))
     (5am:is (equalp vec (vector 2 4 5 7 10)))))
 
@@ -305,6 +314,70 @@
   (let ((tree (make-instance 'binary-search-tree)))
     (add-list-to-tree tree (list 5 2 7 9 1))
     (5am:is (= 5 (size tree)))
+
+    (delete tree 1)
+    (5am:is (= 4 (size tree)))
     
-    (delete-list-from-tree tree (list 1 2 5 7 9))
-    (5am:is (= 0 (size tree)))))
+    (delete tree 2)
+    (5am:is (= 3 (size tree)))
+
+    (delete tree 5)
+    (5am:is (= 2 (size tree)))
+    (5am:is (= 7 (data (root tree))))
+
+    (delete tree 7)
+    (5am:is (= 1 (size tree)))
+    (5am:is (= 9 (data (root tree))))
+
+    (delete tree 9)
+    (5am:is (= 0 (size tree)))
+    (5am:is (null (root tree)))))
+
+(5am:test basic-avl-rebalance
+  (let ((tree (make-instance 'avl-tree)))
+    (add-list-to-tree tree (list 1 2 3))
+    (5am:is (= 2 (height (root tree))))
+    (add-list-to-tree tree (list 4 5 6 7))
+    (5am:is (= 3 (height (root tree))))
+    (5am:is (= 4 (data (root tree))))))
+
+(5am:test basic-double-rotations
+  (let ((tree (make-instance 'avl-tree)))
+    (add-list-to-tree tree (list 5 7 6))
+    (5am:is (= 2 (height (root tree))))
+    (5am:is (= 6 (data (root tree))))))
+
+(5am:test basic-avl-delete
+  (let ((tree (make-instance 'avl-tree)))
+    (add-list-to-tree tree (list 1 2 3 4 5 6 7))
+    (delete-list-from-tree tree (list 7 6 5))
+    (5am:is (= 4 (size tree)))
+    (5am:is (= 2 (data (root tree))))
+    (delete tree 2)
+    (5am:is (= 3 (data (root tree))))
+    (5am:is (= 3 (size tree)))
+    (delete tree 3)
+    (5am:is (= 2 (size tree)))
+    (5am:is (= 4 (data (root tree))))
+    (delete tree 1)
+    (5am:is (= 1 (size tree)))
+    (5am:is (= 4 (data (root tree))))
+    (delete tree 4)
+    (5am:is (= 0 (size tree)))
+    (5am:is (null (root tree)))))
+
+(5am:test basic-binary-search-delete-three-nodes
+  (let ((tree (make-instance 'binary-search-tree)))
+    (add-list-to-tree tree (list 2 3 1))
+    (pre-order-node (root tree) #'display-tree)
+    (delete tree 3)
+    (5am:is (= 2 (size tree)))
+    (5am:is (= 2 (data (root tree))))
+    
+    (delete tree 2)
+    (5am:is (= 1 (size tree)))
+    (5am:is (= 1 (data (root tree))))
+
+    (delete tree 1)
+    (5am:is (= 0 (size tree)))
+    (5am:is (null (root tree)))))
