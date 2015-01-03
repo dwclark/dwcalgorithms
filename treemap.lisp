@@ -1,6 +1,6 @@
 (in-package #:dwcalgorithms)		
 
-(defclass tree-map (red-black-tree)
+(defclass tree-map (rb-tree)
   ((size :initform 0 :reader size)))
 
 (defmethod initialize-instance :after ((map tree-map) &key (elements nil))

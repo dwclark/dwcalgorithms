@@ -36,7 +36,7 @@
 
 (defmethod initialize-instance :after ((tree search-tree) &key (elements nil))
   (if (or (eq (type-of tree) 'search-tree)
-	  (eq (type-of tree) 'red-black-tree))
+	  (eq (type-of tree) 'rb-tree))
       (load-elements tree elements)))
 
 (defgeneric new-node (tree value))

@@ -1,6 +1,6 @@
 (in-package #:dwcalgorithms)
 
-(defclass order-statistic-node (red-black-node)
+(defclass order-statistic-node (rb-node)
   ((size :initform 1 :initarg :size :accessor size)))
 
 (defparameter *nil-order-statistic-node* 
@@ -13,7 +13,7 @@
 (defmethod nil? ((node order-statistic-node))
   (eq *nil-order-statistic-node* node))
 
-(defclass order-statistic-tree (red-black-tree)
+(defclass order-statistic-tree (rb-tree)
   ((root :initform *nil-order-statistic-node* :initarg :root :accessor root)))
 
 (defmethod new-node ((tree order-statistic-tree) value)

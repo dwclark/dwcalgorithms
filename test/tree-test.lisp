@@ -55,16 +55,16 @@
     (right-rotate tree (root tree))
     (5am:is (= 10 (data (root tree))))))
     
-(5am:test test-red-black-tree-basic
-  (let ((tree (make-instance 'red-black-tree :elements (shuffle! (vector 1 2 3 4 5 6 7 8 9 10)))))
+(5am:test test-rb-tree-basic
+  (let ((tree (make-instance 'rb-tree :elements (shuffle! (vector 1 2 3 4 5 6 7 8 9 10)))))
     (5am:is (= 9 (search tree 9)))
     (5am:is (= 8 (predecessor tree 9)))
     (delete tree 8)
     (5am:is (null (search tree 8)))))
 
-(5am:test test-red-black-insert
+(5am:test test-rb-insert
   (let ((to-insert (shuffle! (make-array 101 :initial-contents (loop for i from 0 upto 100 collect i))))
-	(tree (make-instance 'red-black-tree)))
+	(tree (make-instance 'rb-tree)))
     (loop for i across to-insert
        do (let* ((collector (make-array 101 :fill-pointer 0 :adjustable t))
 		 (func (lambda (x) (vector-push-extend x collector))))
@@ -72,7 +72,7 @@
 	    (inorder-walk tree func)
 	    (5am:is (sorted? collector :cmp #'<=>)))))
 
-  (let ((tree (make-instance 'red-black-tree)))
+  (let ((tree (make-instance 'rb-tree)))
     (loop for i from 0 upto 100
        do (let* ((collector (make-array 101 :fill-pointer 0 :adjustable t))
 		 (func (lambda (x) (vector-push-extend x collector))))
@@ -80,8 +80,8 @@
 	    (inorder-walk tree func)
 	    (5am:is (sorted? collector :cmp #'<=>))))))
 
-(5am:test test-red-black-delete
-  (let ((tree (make-instance 'red-black-tree :elements (loop for i from 0 upto 100 collect i))))
+(5am:test test-rb-delete
+  (let ((tree (make-instance 'rb-tree :elements (loop for i from 0 upto 100 collect i))))
     (loop for i in '(57 89 30 31 5 30 21 50 51 52)
        do (let* ((collector (make-array 101 :fill-pointer 0 :adjustable t))
 		 (func (lambda (x) (vector-push-extend x collector))))

@@ -1,9 +1,9 @@
 (in-package #:dwcalgorithms)
 
-(defclass red-black-node (search-node)
+(defclass rb-node (search-node)
   ((color :initarg :color :initform 'black :accessor color)))
   
-(defparameter *nil-red-black-node* (make-instance 'red-black-node))
+(defparameter *nil-rb-node* (make-instance 'rb-node))
 
 (defun init-rb-node (node nil-node)
   (if (not (slot-boundp node 'right))
@@ -15,30 +15,30 @@
   (if (not (slot-boundp node 'parent))
       (setf (parent node) nil-node)))
 
-(defmethod initialize-instance :after ((node red-black-node) &key)
-  (if (eq (type-of node) 'red-black-node)
-      (init-rb-node node *nil-red-black-node*)))
+(defmethod initialize-instance :after ((node rb-node) &key)
+  (if (eq (type-of node) 'rb-node)
+      (init-rb-node node *nil-rb-node*)))
 
-(defmethod nil? ((node red-black-node))
-  (eq *nil-red-black-node* node))
+(defmethod nil? ((node rb-node))
+  (eq *nil-rb-node* node))
 
-(defclass red-black-tree (search-tree)
-  ((root :initform *nil-red-black-node* :initarg :root :accessor root)))
+(defclass rb-tree (search-tree)
+  ((root :initform *nil-rb-node* :initarg :root :accessor root)))
 
-(defmethod new-node ((tree red-black-tree) value)
-  (make-instance 'red-black-node :data value))
+(defmethod new-node ((tree rb-tree) value)
+  (make-instance 'rb-node :data value))
 
-(defmethod nil-node ((tree red-black-tree))
-  *nil-red-black-node*)
+(defmethod nil-node ((tree rb-tree))
+  *nil-rb-node*)
 
-(defmethod insert ((tree red-black-tree) value)
+(defmethod insert ((tree rb-tree) value)
   (let ((new-node (call-next-method)))
     (setf (color new-node) 'red)
     (insert-fixup tree new-node)))
 
 (defgeneric insert-fixup (tree node))
 
-(defmethod insert-fixup((tree red-black-tree) (the-node red-black-node))
+(defmethod insert-fixup((tree rb-tree) (the-node rb-node))
   (loop 
      with node = the-node 
      while (eq 'red (color (parent node)))
@@ -84,7 +84,7 @@
 
   (setf (color (root tree)) 'black))
 
-(defmethod delete-node ((tree red-black-tree) (node red-black-node))
+(defmethod delete-node ((tree rb-tree) (node rb-node))
   (multiple-value-bind (splice-node child-node) (call-next-method)
     (if (eq 'black (color splice-node))
         (delete-fixup tree child-node splice-node))
@@ -93,7 +93,7 @@
 
 (defgeneric delete-fixup (tree node splice-node))
 
-(defmethod delete-fixup ((tree red-black-tree) (the-node red-black-node) (splice-node red-black-node))
+(defmethod delete-fixup ((tree rb-tree) (the-node rb-node) (splice-node rb-node))
   (loop 
      with node = the-node
      while (and (not (eq node (root tree)))

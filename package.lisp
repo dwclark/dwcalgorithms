@@ -17,7 +17,7 @@
    #:hash-search #:hash-set #:hash-map #:multi-hash-map #:tree-map #:size #:[]
    
    ;tree interface and types
-   #:binary-tree #:binary-tree-with-parent #:binary-search-tree #:avl-tree #:red-black-tree #:search-tree
+   #:binary-tree #:binary-tree-with-parent #:binary-search-tree #:avl-tree #:rb-tree #:search-tree
    #:pre-order #:in-order #:post-order #:merge-trees #:clear
    
    ;stack interface and type
