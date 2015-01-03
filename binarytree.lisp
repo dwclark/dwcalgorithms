@@ -91,7 +91,6 @@
    (node-type :initform 'binary-node :reader node-type :allocation :class)))
 
 (defgeneric clear (tree))
-(defgeneric new-node (tree data))
 (defgeneric insert-left (tree node data))
 (defgeneric insert-right (tree node data))
 (defgeneric remove-left (tree node))
@@ -315,10 +314,10 @@
                        (setf ,y (parent ,y)))
                   finally (return ,y))))))))
 
-(defmethod next-node ((node binary-search-node))
+(defun next-node (node)
   (one-node-to-the right node))
 
-(defmethod previous-node ((node binary-search-node))
+(defun previous-node (node)
   (one-node-to-the left node))
 
 (defmethod remove-node ((node binary-search-node))

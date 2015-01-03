@@ -1,7 +1,5 @@
 (in-package #:dwcalgorithms)
 
-(defgeneric <=> (first second))
-
 (defmethod <=> ((first real) (second real))
   (cond 
     ((< first second) -1)
@@ -19,8 +17,6 @@
     ((char< first second) -1)
     ((string= first second) 0)
     (t 1)))
-
-(defgeneric <=>-ignore-case (first second))
 
 (defmethod <=>-ignore-case ((first string) (second string))
   (cond 
@@ -110,8 +106,8 @@
   (labels 
       ((internal-median-sort (left right)
          (if (not (<= right left))
-             (let* ((mid (truncate (/ (+ (- right left) 1) 2)))
-                    (me (select-kth! vec cmp (1+ mid) left right)))
+             (let ((mid (truncate (/ (+ (- right left) 1) 2))))
+               (select-kth! vec cmp (1+ mid) left right)
                (internal-median-sort left (- (+ left mid) 1))
                (internal-median-sort (+ left mid 1) right)))))
 

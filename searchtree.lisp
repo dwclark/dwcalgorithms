@@ -1,5 +1,7 @@
 (in-package #:dwcalgorithms)
 
+(defgeneric nil? (node))
+
 (defclass search-node ()
   ((data :initform nil :initarg :data :accessor data)
    (right :initarg :right :accessor right)
@@ -39,16 +41,12 @@
 	  (eq (type-of tree) 'rb-tree))
       (load-elements tree elements)))
 
-(defgeneric new-node (tree value))
-
 (defmethod new-node ((tree search-tree) value)
   (make-instance 'search-node :data value))
 
 (defgeneric nil-node (tree)
   (:method ((tree search-tree))
     *nil-search-node*))
-
-(defgeneric insert (tree value))
 
 (defmethod insert ((tree search-tree) value)
     (with-accessors ((root root) (cmp cmp)) tree

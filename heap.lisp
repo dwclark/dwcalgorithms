@@ -27,9 +27,7 @@
   (once-only (index)
     `(truncate (/ (1- ,index) 2))))
 
-(defgeneric parent-value (the-heap index))
-
-(defmethod parent-value ((the-heap heap) index)
+(defun parent-value (the-heap index)
   (with-slots (ary) the-heap
     (aref ary (parent-index index))))
 
@@ -37,9 +35,7 @@
   (once-only (index)
     `(+ 1 (* 2 ,index))))
 
-(defgeneric left-value (the-heap index))
-
-(defmethod left-value ((the-heap heap) index)
+(defun left-value (the-heap index)
   (with-slots (ary) the-heap
     (aref ary (left-index index))))
 
@@ -47,9 +43,7 @@
   (once-only (index)
     `(+ 2 (* 2 ,index))))
 
-(defgeneric right-value (the-heap index))
-
-(defmethod right-value ((the-heap heap) index)
+(defun right-value (the-heap index)
   (with-slots (ary) the-heap
     (aref ary (right-index index))))
 
@@ -81,9 +75,7 @@
       
       ret)))
 
-(defgeneric heap->sorted (the-heap))
-
-(defmethod heap->sorted ((the-heap heap))
+(defun heap->sorted (the-heap)
   (with-slots (ary cmp size) the-heap
     (loop 
        for i from (1- size) downto 1
@@ -92,7 +84,7 @@
             (decf size)
             (heapify the-heap 0)))))
 
-(defmethod heapify ((the-heap heap) i)
+(defun heapify (the-heap i)
   (with-slots (ary cmp size) the-heap
     (let ((left (left-index i))
           (right (right-index i))
@@ -109,7 +101,7 @@
             (swap! ary extremum i)
             (heapify the-heap extremum))))))
 
-(defmethod build ((the-heap heap))
+(defun build (the-heap)
   (with-slots (ary cmp size) the-heap
     (loop 
        with n = size

@@ -1,5 +1,8 @@
 (in-package #:dwcalgorithms)
 
+(defgeneric <=> (first second))
+(defgeneric <=>-ignore-case (first second))
+
 (defgeneric search (collection value))
 (defgeneric insert (collection value))
 (defgeneric delete (collection value))
@@ -16,3 +19,8 @@
 
 (defgeneric enqueue (the-queue element))
 (defgeneric dequeue (the-queue))
+
+(defgeneric new-node (tree data))
+
+(defgeneric [] (map key))
+(defgeneric (setf []) (val map key))

@@ -50,15 +50,13 @@
   ((name :initarg :name :accessor name)
    (age :initarg :age :accessor age)))
 
-(defgeneric person-equal (p1 p2)
-  (:method ((p1 person) (p2 person))
-    (and (= (age p1) (age p2))
-	 (equal (name p1) (name p2)))))
+(defun person-equal (p1 p2)
+  (and (= (age p1) (age p2))
+       (equal (name p1) (name p2))))
 
-(defgeneric person-hash (p)
-  (:method ((p person))
-    (sxhash (+ (loop for char across (name p) summing (char-code char))
-	       (age p)))))
+(defun person-hash (p)
+  (sxhash (+ (loop for char across (name p) summing (char-code char))
+             (age p))))
 
 (5am:test test-multi-hash-map
   (let ((grades (make-instance 'multi-hash-map :hash-func #'person-hash :equal-func #'person-equal))
