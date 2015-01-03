@@ -55,9 +55,9 @@
 
 (defun make-traversal-test-tree ()
   (let* ((tree (make-instance 'binary-tree))
-         (root-node (insert-left tree nil "root data"))
-         (left-node (insert-left tree root-node "left data"))
-         (right-node (insert-right tree root-node "right data")))
+         (root-node (insert-left tree nil "root data")))
+    (insert-left tree root-node "left data")
+    (insert-right tree root-node "right data")
     tree))
 
 (5am:test pre-order-tree

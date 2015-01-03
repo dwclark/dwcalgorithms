@@ -28,7 +28,6 @@
           (setf (fill-pointer ary) (1- (fill-pointer ary)))
           first))))
 
-;;TODO: Replace all with more efficient versions
 (defmacro <? (func left right)
   (once-only (left right)
     (if (symbolp func)

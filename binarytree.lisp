@@ -4,8 +4,8 @@
 ;;1) Clean up return values
 ;;2) Separate into files
 ;;3) Re-vist inheritance hierarchy (mainly make sure contracts are obeyed as things are extended
-;;4) AVL balanced tree, finish it up
-;;5) Implement red/black tree for this interface
+;;4) Implement red/black tree for this interface
+;;5) Make tests to see if any given avl tree violates the avl constraints
 
 (defclass binary-node ()
   ((data :initform nil :initarg :data :accessor data)
