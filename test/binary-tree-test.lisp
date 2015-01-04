@@ -29,10 +29,14 @@
   (lambda (data)
     (vector-push-extend data vec)))
 
+(defun add-to-vector-node (vec)
+  (lambda (node)
+    (vector-push-extend (data node) vec)))
+
 (5am:test pre-order-traversal
   (let ((the-node (make-traversal-test-node))
         (the-vector (make-array 3 :adjustable t :fill-pointer 0)))
-    (pre-order the-node (add-to-vector the-vector))
+    (pre-order-node the-node (add-to-vector-node the-vector))
     (5am:is (string= (elt the-vector 0) "root data"))
     (5am:is (string= (elt the-vector 1) "left data"))
     (5am:is (string= (elt the-vector 2) "right data"))))
@@ -148,9 +152,9 @@
     
     (link-on right two one)
     (link-on right two three)
-    (in-order one (add-to-vector before-vector))
+    (in-order-node one (add-to-vector-node before-vector))
     (left-rotate-node one)
-    (in-order two (add-to-vector after-vector))
+    (in-order-node two (add-to-vector-node after-vector))
     (5am:is (equalp before-vector after-vector))))
 
 (5am:test left-rotate-node
@@ -162,9 +166,9 @@
 
     (link-on left two three)
     (link-on left one two)
-    (in-order three (add-to-vector before-vector))
+    (in-order-node three (add-to-vector-node before-vector))
     (right-rotate-node three)
-    (in-order two (add-to-vector after-vector))
+    (in-order-node two (add-to-vector-node after-vector))
     (5am:is (equalp before-vector after-vector))))
 
 (5am:test insert-binary-search-tree
@@ -397,3 +401,33 @@
       
       ;;test left-right leaning
       (test-now-balanced (loop for i in (list 3 1 2) do (insert tree i) finally (return tree))))))
+
+(5am:test insert-duplicates
+  (let ((tree (make-instance 'avl-tree)))
+    (insert tree 100)
+    (insert tree 100)
+
+    (5am:is (= 1 (size tree)))))
+
+(defparameter *number-avl-constraint-tests* 150)
+
+(defun avl-balanced? (tree)
+  (let ((results (make-array *number-avl-constraint-tests* :adjustable t :fill-pointer 0)))
+    (in-order-node (root tree) 
+                   #'(lambda (node)
+                       (if (>= (balance-factor node) 2)
+                           (vector-push-extend 1 results)
+                           (vector-push-extend 0 results))))
+    (5am:is (= 0 (count 1 results)))))
+
+(5am:test honors-avl-constraints
+  (let ((tree (make-instance 'avl-tree))
+        (random-numbers (random-num-array 150 10000)))
+    (loop for i across random-numbers do (insert tree i))
+    (avl-balanced? tree)
+    (loop 
+       for i across random-numbers
+       do (progn
+            (delete tree i)
+            (avl-balanced? tree)))))
+

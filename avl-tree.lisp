@@ -1,6 +1,5 @@
 (in-package #:dwcalgorithms)
 
-;; AVL Nodes and Trees
 (defclass avl-node (binary-search-node)
   ((height :initform 1 :accessor height)))
 
@@ -109,12 +108,14 @@
 
 (defmethod insert ((tree avl-tree) val)
   (let ((new-node (call-next-method)))
-    (compute-and-rebalance-insert tree (parent new-node))
+    (if (not (null new-node))
+        (compute-and-rebalance-insert tree (parent new-node)))
     new-node))
 
 (defmethod delete ((tree avl-tree) val)
   (let ((parent-of-deleted (call-next-method)))
-    (compute-and-rebalance-delete tree parent-of-deleted)
+    (if (not (null parent-of-deleted))
+        (compute-and-rebalance-delete tree parent-of-deleted))
     parent-of-deleted))
 
 (defmethod merge-trees ((left-tree avl-tree) (right-tree avl-tree) data)

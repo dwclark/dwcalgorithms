@@ -46,7 +46,8 @@
   :perform (asdf:test-op (o s)
                          (run-all-tests))
   :components ((:module "test"
-                        :components ((:file "sort-test")
+                        :components ((:file "testing-utils")
+                                     (:file "sort-test" :depends-on ("testing-utils"))
                                      (:file "search-test")
                                      (:file "hash-test")
                                      (:file "tree-test")
@@ -54,4 +55,4 @@
                                      (:file "util-test")
                                      (:file "heap-test")
                                      (:file "queue-test")
-                                     (:file "binary-tree-test")))))
+                                     (:file "binary-tree-test" :depends-on ("testing-utils"))))))

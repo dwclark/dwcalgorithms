@@ -71,10 +71,11 @@
                    (progn
                      (setf insertion-func #'insert-left)
                      (setf iter (left insertion-point))))
-                  ;;Found exact match, don't allow a duplicate
+                  ;;Found exact match, copy new data in, set insertion-func, iter -> nil
                   ((=? cmp data data-to-cmp)
                    (progn
                      (setf insertion-func nil)
+                     (setf (data iter) data-to-cmp)
                      (setf iter nil)))
                   ;;Go Right
                   (t
@@ -85,7 +86,7 @@
 
 (defmethod insert ((tree binary-search-tree) val)
   (multiple-value-bind (point func) (find-insertion-point tree val)
-    (if (not (null func))
+    (if (and (not (null func)) (not (null func)))
         (funcall func tree point val)
         nil)))
 
@@ -129,7 +130,7 @@
         nil)))
 
 (defmethod delete ((tree binary-search-tree) val)
-  (multiple-value-bind (point func) (find-insertion-point tree val)
+  (let ((point (find-insertion-point tree val)))
     (if (not (null point))
         ;;case where we have something to delete
         (progn

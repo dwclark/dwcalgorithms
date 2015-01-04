@@ -1,14 +1,8 @@
 (in-package #:dwcalgorithms)
 
 ;;TODO
-;;1) Clean up return values
-;;3) Re-vist inheritance hierarchy (mainly make sure contracts are obeyed as things are extended
-;;4) Implement red/black tree for this interface
-;;5) Make tests to see if any given avl tree violates the avl constraints
+;;1) Implement red/black tree for this interface
 
-(defgeneric pre-order (node proc))
-(defgeneric in-order (node proc))
-(defgeneric post-order (node proc))
 (defgeneric insert-left (tree node data))
 (defgeneric insert-right (tree node data))
 (defgeneric merge-trees (left-tree right-tree root-data))
@@ -42,21 +36,7 @@
                    (inner (right node)))))))
     (inner node)))
 
-(defmethod pre-order ((node binary-node) proc)
-  (labels
-      ((inner (node)
-         (if (not (null node))
-             (progn
-               (funcall proc (data node))
-               
-               (if (not (null (left node)))
-                   (inner (left node)))
-
-               (if (not (null (right node)))
-                   (inner (right node)))))))
-    (inner node)))
-
-(defmethod in-order ((node binary-node) proc)
+(defun in-order-node (node proc)
   (labels
       ((inner (node)
          (if (not (null node))
@@ -64,13 +44,13 @@
                (if (not (null (left node)))
                    (inner (left node)))
                
-               (funcall proc (data node))
+               (funcall proc node)
 
                (if (not (null (right node)))
                    (inner (right node)))))))
     (inner node)))
 
-(defmethod post-order ((node binary-node) proc)
+(defun post-order-node (node proc)
   (labels
       ((inner (node)
          (if (not (null node))
@@ -81,7 +61,7 @@
                (if (not (null (right node)))
                    (inner (right node)))
                
-               (funcall proc (data node))))))
+               (funcall proc node)))))
     (inner node)))
 
 (defclass binary-tree ()
@@ -151,13 +131,13 @@
 
 (defmethod pre-order ((tree binary-tree) proc)
   (if (not (null (root tree)))
-      (pre-order (root tree) proc)))
+      (pre-order-node (root tree) #'(lambda (node) (funcall proc (data node))))))
 
 (defmethod in-order ((tree binary-tree) proc)
   (if (not (null (root tree)))
-      (in-order (root tree) proc)))
+      (in-order-node (root tree) #'(lambda (node) (funcall proc (data node))))))
 
 (defmethod post-order ((tree binary-tree) proc)
   (if (not (null (root tree)))
-      (post-order (root tree) proc)))
+      (post-order-node (root tree) #'(lambda (node) (funcall proc (data node))))))
 
