@@ -100,8 +100,7 @@
       nil))
 
 (defclass avl-tree (binary-search-tree)
-  ((node-type :initform 'avl-node :reader node-type :allocation :class)
-   (cmp :initform #'<=> :initarg :cmp :reader cmp)))
+  ((node-type :initform 'avl-node :reader node-type :allocation :class)))
 
 (defmethod new-node ((tree avl-tree) data)
   (make-instance (node-type tree) :data data))

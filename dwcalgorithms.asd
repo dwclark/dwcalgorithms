@@ -16,6 +16,7 @@
                (:file "binary-tree-with-parent" :depends-on ("binary-tree"))
                (:file "binary-search-tree" :depends-on ("binary-tree-with-parent"))
                (:file "avl-tree" :depends-on ("binary-search-tree"))
+               (:file "red-black-tree" :depends-on ("binary-search-tree"))
                (:file "searchtree" :depends-on ("dwcalgorithms" "util"))
                (:file "queue" :depends-on ("heap"))
                (:file "sort" :depends-on ("heap"))
