@@ -61,7 +61,7 @@
           (insertion-point nil))
 
       (loop
-         while (not (null iter))
+         while (and (not (null iter)) (not (null insertion-func)))
          do (progn
               (setf insertion-point iter)
               (let ((data-to-cmp (data insertion-point)))
@@ -75,8 +75,8 @@
                   ((=? cmp data data-to-cmp)
                    (progn
                      (setf insertion-func nil)
-                     (setf (data iter) data-to-cmp)
-                     (setf iter nil)))
+                     (setf insertion-point iter)))
+                     
                   ;;Go Right
                   (t
                    (progn
@@ -84,18 +84,27 @@
                      (setf iter (right insertion-point)))))))
          finally (return (values insertion-point insertion-func))))))
 
+(defun found-insertion-point? (point func)
+  (not (null func)))
+
+(defun found-point? (point func)
+  (and (not (null point)) (null func)))
+
 (defmethod insert ((tree binary-search-tree) val)
   (multiple-value-bind (point func) (find-insertion-point tree val)
-    (if (and (not (null func)) (not (null func)))
-        (funcall func tree point val)
-        nil)))
-
-(defun found? (point func)
-  (and (null func) (not (null point))))
+    (cond 
+      ((found-insertion-point? point func)
+       (funcall func tree point val))
+      
+      ((found-point? point func)
+       (setf (data point) val)
+       nil)
+      
+      (t  nil))))
 
 (defmethod search ((tree binary-search-tree) val)
   (multiple-value-bind (point func) (find-insertion-point tree val)
-    (if (found? point func)
+    (if (found-point? point func)
         (data point)
         nil)))
 
@@ -113,7 +122,7 @@
 
 (defmethod predecessor ((tree binary-search-tree) val)
   (multiple-value-bind (point func) (find-insertion-point tree val)
-    (if (found? point func)
+    (if (found-point? point func)
         (let ((pred-node (previous-node point)))
           (if (not (null pred-node))
               (data pred-node)
@@ -122,7 +131,7 @@
 
 (defmethod successor ((tree binary-search-tree) val)
   (multiple-value-bind (point func) (find-insertion-point tree val)
-    (if (found? point func)
+    (if (found-point? point func)
         (let ((next-node (next-node point)))
           (if (not (null next-node))
               (data next-node)

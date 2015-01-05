@@ -23,6 +23,14 @@
 (defun root? (node)
   (null (parent node)))
 
+(defun sibling (node)
+  (with-accessors ((parent parent)) node
+    (if (not (null parent))
+        (if (right? node)
+            (left parent)
+            (right parent))
+        nil)))
+
 (defmacro link-on (direction node p-node)
   (once-only (node p-node)
     `(progn
