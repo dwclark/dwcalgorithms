@@ -138,6 +138,19 @@
               nil))
         nil)))
 
+(defun root-special-cases (tree point)
+  (if (= 0 (number-of-children point))
+      ;;root has no children, will be empty tree
+      (progn
+        (clear tree)
+        nil)
+      ;;root has one child, it will become the root
+      (let ((other (if (not (null (left point))) (left point) (right point))))
+        (remove-node point)
+        (decf (size tree))
+        (setf (root tree) other)
+        other)))
+
 (defmethod delete ((tree binary-search-tree) val)
   (let ((point (find-insertion-point tree val)))
     (if (not (null point))
@@ -145,18 +158,7 @@
         (progn
           ;;handle the root differently
           (if (and (root? point) (< (number-of-children point) 2))
-              (progn
-                (if (= 0 (number-of-children point))
-                    ;;root has no children, will be empty tree
-                    (progn
-                      (clear tree)
-                      nil)
-                    ;;root has one child, it will become the root
-                    (let ((other (if (not (null (left point))) (left point) (right point))))
-                      (remove-node point)
-                      (decf (size tree))
-                      (setf (root tree) other)
-                      other)))
+              (root-special-cases tree point)
           
               ;;not root case
               (let ((parent-of-deleted (remove-node point)))

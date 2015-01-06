@@ -40,38 +40,19 @@
            (setf (,direction ,p-node) ,node))
        ,node)))
 
-(defun remove-leaf-node (node)
-  (with-accessors ((parent parent)) node
-    (cond
-      ((left? node)
-       (link-on left nil parent)
-       parent)
-      ((right? node)
-       (link-on right nil parent)
-       parent))))
-
-(defun remove-single-child-node (node)
-  (with-accessors ((parent parent)) node
-    (cond
-      ((not (null (left node)))
-       (if (right? node)
-           (link-on right (left node) parent)
-           (link-on left (left node) parent))
-       parent)
-      
-      ((not (null (right node)))
-       (if (right? node)
-           (link-on right (right node) parent)
-           (link-on left (right node) parent))
-       parent))))
-
 (defmethod remove-node ((node binary-node-with-parent))
   (let ((children (number-of-children node)))
     (assert (< children 2))
     
-    (if (= 0 children)
-        (remove-leaf-node node)
-        (remove-single-child-node node))))
+    (with-accessors ((parent parent)) node
+      (if (not (null (left node)))
+          (if (right? node)
+              (link-on right (left node) parent)
+              (link-on left (left node) parent))
+          (if (right? node)
+              (link-on right (right node) parent)
+              (link-on left (right node) parent)))
+      parent)))
 
 (defmacro direction-rotate (the-direction x)
   (with-unique-names (permanent-root y beta)

@@ -62,3 +62,20 @@
         (red-black-rebalance-insert tree new-node))
     (setf (color (root tree)) :black)
     new-node))
+
+(defmethod delete ((tree red-black-tree) val)
+  (let ((ret (call-next-method)))
+    (if (not (null (root tree)))
+        (setf (root tree) :black))
+    ret))
+
+;; (defmethod remove-node ((node red-black-node))
+  
+;;   (let ((children (number-of-children node)))
+;;     (if (< children 2)
+;;         (call-next-method)
+;;         (let* ((next (next-node node))
+;;                (data (data next)))
+;;           (setf (data node) data)
+;;           (call-next-method next)))))
+
