@@ -431,106 +431,107 @@
             (delete tree i)
             (avl-balanced? tree)))))
 
-(defun has-red-violations (node)
-  (let ((possible-violations (make-array 10 :adjustable t :fill-pointer 0)))
-    (in-order-node node
-                   #'(lambda (the-node)
-                       (if (red-violation? the-node)
-                           (vector-push-extend 1 possible-violations))))
-    (> (count 1 possible-violations) 0)))
+(5am:test red-violations?-test
+  (let ((root (make-instance 'red-black-node :color :black)))
+    (5am:is (not (red-violations? root))))
 
-(defun black-path-lengths (top-level-node)
-  (let ((path-lengths (make-array 10 :adjustable t :fill-pointer 0)))
-    (labels ((counter (node total)
-               (cond 
-                 ((null node)
-                  (vector-push-extend total path-lengths))
-                 ((red? node)
-                  (counter (left node) total)
-                  (counter (right node) total))
-                 ((not (red? node))
-                  (counter (left node) (1+ total))
-                  (counter (right node) (1+ total))))))
-      (counter top-level-node 0))
-    path-lengths))
+  (let* ((root (make-instance 'red-black-node :color :black)))
+    (link-on left (make-instance 'red-black-node :color :red) root)
+    (link-on right (make-instance 'red-black-node :color :red) root)
+    (5am:is (not (red-violations? root))))
+  
+  (let* ((root (make-instance 'red-black-node :color :black))
+         (first-left (link-on left (make-instance 'red-black-node :color :red) root)))
+    (link-on right (make-instance 'red-black-node :color :red) root)
+    (link-on right (make-instance 'red-black-node :color :red) first-left)
+    (5am:is (red-violations? root))))
 
-(defun has-black-violations (node)
-  (let ((lengths (black-path-lengths node)))
-    (notevery #'(lambda (val) 
-                  (= (aref lengths 0) val)) lengths)))
-            
-(defun has-red-black-violations (node)
-  (or (has-red-violations node)
-      (has-black-violations node)))
+(5am:test black-violations?-test
+  (let ((root (make-instance 'red-black-node :color :black)))
+    (5am:is (not (black-violations? root))))
 
-(5am:test test-has-red-violations
-  (let ((root (make-instance 'red-black-node)))
-    (5am:is (not (has-red-violations root))))
+  (let* ((root (make-instance 'red-black-node :color :black)))
+    (link-on left (make-instance 'red-black-node :color :black) root)
+    (link-on right (make-instance 'red-black-node :color :black) root)
+    (5am:is (not (black-violations? root))))
 
-    (let ((root (make-instance 'red-black-node)))
-      (setf (color root) :black)
-      (5am:is (not (has-red-violations root))))
+  (let* ((root (make-instance 'red-black-node :color :black))
+         (first-left (link-on left (make-instance 'red-black-node :color :red) root)))
+    (link-on right (make-instance 'red-black-node :color :red) root)
+    (link-on right (make-instance 'red-black-node :color :red) first-left)
+    (5am:is (not (black-violations? root))))
 
-    (let ((root (make-instance 'red-black-node))
-          (child (make-instance 'red-black-node)))
-      (setf (color root) :black)
-      (link-on left child root)
-      (5am:is (not (has-red-violations root))))
-
-    (let ((root (make-instance 'red-black-node))
-          (child (make-instance 'red-black-node))
-          (grand-child (make-instance 'red-black-node)))
-      (setf (color root) :black)
-      (link-on left child root)
-      (link-on left grand-child child)
-      (5am:is (has-red-violations root))))
-
-(5am:test test-black-path-lengths
-   (let ((root (make-instance 'red-black-node)))
-     (setf (color root) :black)
-     (5am:is (not (has-black-violations root))))
-   
-   (let ((zero (make-instance 'red-black-node :data 0))
-         (one (make-instance 'red-black-node :data 1))
-         (two (make-instance 'red-black-node :data 2))
-         (three (make-instance 'red-black-node :data 3))
-         (four (make-instance 'red-black-node :data 4))
-         (five (make-instance 'red-black-node :data 5))
-         (six (make-instance 'red-black-node :data 6)))
-         
-         (loop for i in (list zero one two five) do (setf (color i) :black))
-         (link-on left zero one)
-         (link-on right three one)
-         (link-on left two three)
-         (link-on right five three)
-         (link-on left four five)
-         (link-on right six five)
-         (5am:is (not (has-black-violations one)))))
-         
+  (let* ((root (make-instance 'red-black-node :color :black))
+         (first-left (link-on left (make-instance 'red-black-node :color :black) root)))
+    (link-on right (make-instance 'red-black-node :color :black) root)
+    (link-on right (make-instance 'red-black-node :color :black) first-left)
+    (5am:is (black-violations? root))))
 
 (5am:test first-three-red-black
   (let ((tree (make-instance 'red-black-tree)))
     (insert tree 10)
-    (5am:is (not (has-red-black-violations (root tree))))
+    (5am:is (not (red-black-violations? (root tree))))
     (insert tree 5)
     (insert tree 15)
-    (5am:is (not (has-red-black-violations (root tree))))))
+    (5am:is (not (red-black-violations? (root tree))))))
 
 (5am:test four-red-black
   (let ((on-left (make-instance 'red-black-tree))
         (on-right (make-instance 'red-black-tree)))
     (loop for i in (list 2 1 3 0) do (insert on-left i))
-    (5am:is (not (has-red-black-violations (root on-left))))
+    (5am:is (not (red-black-violations? (root on-left))))
     (loop for i in (list 2 1 3 4) do (insert on-right i))
-    (5am:is (not (has-red-black-violations (root on-right))))))
+    (5am:is (not (red-black-violations? (root on-right))))))
 
 (5am:test simple-red-black-right-rotation
   (let ((tree (make-instance 'red-black-tree)))
     (loop for i in (list 1 0 3 2 5 4 6 7) do (insert tree i))
-    (5am:is (not (has-red-black-violations (root tree))))))
+    (5am:is (not (red-black-violations? (root tree))))))
 
 (5am:test red-black-insertions
   (let ((tree (make-instance 'red-black-tree))
         (random-numbers (random-num-array 200 10000)))
     (loop for i across random-numbers do (insert tree i))
-    (5am:is (not (has-red-black-violations (root tree))))))
+    (5am:is (not (red-black-violations? (root tree))))))
+
+(5am:test red-black-deletes-asc-insert
+  (let ((tree (make-instance 'red-black-tree))
+        (vals (vector 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30)))
+    (loop for i across vals do (insert tree i))
+    (shuffle! vals)
+    (loop 
+       for i across vals
+       do (progn
+            (delete tree i)
+            (5am:is (not (red-black-violations? (root tree))))))
+    (5am:is (= 0 (size tree)))))
+
+(5am:test red-black-deletes-desc-insert
+  (let ((tree (make-instance 'red-black-tree))
+        (vals (vector 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1)))
+    (loop for i across vals do (insert tree i))
+    (shuffle! vals)
+    (loop 
+       for i across vals
+       do (progn
+            (delete tree i)
+            (5am:is (not (red-black-violations? (root tree))))))
+    (5am:is (= 0 (size tree)))))
+
+;; (5am:test red-black-deletes-totally-random
+;;   (let ((tree (make-instance 'red-black-tree))
+;;         (vals (vector 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1)))
+;;     (shuffle! vals)
+;;     (format t "vals: ~A~%" vals)
+;;     (loop for i across vals do (insert tree i))
+;;     (shuffle! vals)
+;;     (format t "vals 2: ~A~%" vals)
+;;     (loop 
+;;        for i across vals
+;;        do (progn
+;;             (format t "Deleting ~A~%" i)
+;;             (delete tree i)
+;;             (5am:is (not (red-black-violations? (root tree))))))
+;;     (5am:is (= 0 (size tree)))))
+
+

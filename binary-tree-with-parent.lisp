@@ -52,7 +52,7 @@
           (if (right? node)
               (link-on right (right node) parent)
               (link-on left (right node) parent)))
-      parent)))
+      (values parent node))))
 
 (defmacro direction-rotate (the-direction x)
   (with-unique-names (permanent-root y beta)
