@@ -38,15 +38,6 @@
 (defun previous-node (node)
   (one-node-to-the left node))
 
-(defmethod remove-node ((node binary-search-node))
-  (let ((children (number-of-children node)))
-    (if (< children 2)
-        (call-next-method)
-        (let* ((next (next-node node))
-               (data (data next)))
-          (setf (data node) data)
-          (call-next-method next)))))
-
 (defclass binary-search-tree (binary-tree-with-parent)
   ((node-type :initform 'binary-search-node :reader node-type :allocation :class)
    (cmp :initform #'<=> :initarg :cmp :reader cmp)))
@@ -71,7 +62,8 @@
                    (progn
                      (setf insertion-func #'insert-left)
                      (setf iter (left insertion-point))))
-                  ;;Found exact match, copy new data in, set insertion-func, iter -> nil
+
+                  ;;Found exact match, set insertion-func -> nil
                   ((=? cmp data data-to-cmp)
                    (progn
                      (setf insertion-func nil)
@@ -83,6 +75,16 @@
                      (setf insertion-func #'insert-right)
                      (setf iter (right insertion-point)))))))
          finally (return (values insertion-point insertion-func))))))
+
+(defun find-deletion-points (tree data)
+  (multiple-value-bind (point func) (find-insertion-point tree data)
+    (if (and (not (null point))
+             (null func))
+        (values point
+                (if (= 2 (number-of-children point)) 
+                    (next-node point) 
+                    nil))
+        (values nil nil))))
 
 (defun found-insertion-point? (point func)
   (not (null func)))
@@ -138,33 +140,20 @@
               nil))
         nil)))
 
-(defun root-special-cases (tree point)
-  (if (= 0 (number-of-children point))
-      ;;root has no children, will be empty tree
+(defun setup-final-deletion-point (point succ)
+  (if succ
       (progn
-        (clear tree)
-        nil)
-      ;;root has one child, it will become the root
-      (let ((other (if (not (null (left point))) (left point) (right point))))
-        (remove-node point)
-        (decf (size tree))
-        (setf (root tree) other)
-        other)))
+        (setf (data point) (data succ))
+        succ)
+      point))
 
 (defmethod delete ((tree binary-search-tree) val)
-  (let ((point (find-insertion-point tree val)))
-    (if (not (null point))
-        ;;case where we have something to delete
-        (progn
-          ;;handle the root differently
-          (if (and (root? point) (< (number-of-children point) 2))
-              (root-special-cases tree point)
-          
-              ;;not root case
-              (let ((parent-of-deleted (remove-node point)))
-                (decf (size tree))
-                (if (root? parent-of-deleted)
-                    (setf (root tree) parent-of-deleted))
-                parent-of-deleted)))
+  (multiple-value-bind (point succ) (find-deletion-points tree val)
+    (if point
+        (let ((to-delete (setup-final-deletion-point point succ)))
+          (remove-node to-delete)
+          (decf (size tree))
+          (if (root? to-delete)
+              (setf (root tree) (child to-delete)))
+          to-delete)
         nil)))
-

@@ -29,7 +29,7 @@
           first))))
 
 (defmacro <? (func left right)
-  (once-only (left right)
+  (once-only (func left right)
     (if (symbolp func)
         `(= -1 (funcall ,func ,left ,right))
         `(= -1 (,func ,left ,right)))))

@@ -3,18 +3,6 @@
 (defclass avl-node (binary-search-node)
   ((height :initform 1 :accessor height)))
 
-(defmethod left-rotate-node ((x avl-node))
-  (multiple-value-bind (upper lower) (call-next-method)
-    (recompute-height lower)
-    (recompute-height upper)
-    (values upper lower)))
-
-(defmethod right-rotate-node ((x avl-node))
-  (multiple-value-bind (upper lower) (call-next-method)
-    (recompute-height lower)
-    (recompute-height upper)
-    (values upper lower)))
-
 (defun left-height (the-avl-node)
   (if (not (null (left the-avl-node)))
       (height (left the-avl-node))
@@ -56,21 +44,13 @@
     (if (not (= 2 (abs top-imbalance)))
         (error 'illegal-state :message "All rotations should start with +2 or -2 imbalances"))
     
-    (let ((upper (if (= 2 top-imbalance)
-                     (if (>= sub-imbalance 0)
-                         (left-rotate-node node)
-                         (progn
-                           (right-rotate-node tallest-sub-node)
-                           (left-rotate-node node)))
-                     (if (<= sub-imbalance 0)
-                         (right-rotate-node node)
-                         (progn
-                           (left-rotate-node tallest-sub-node)
-                           (right-rotate-node node))))))
-
-      (if (root? upper)
-          (setf (root tree) upper))
-      upper)))
+    (if (= 2 top-imbalance)
+        (if (>= sub-imbalance 0)
+            (left-rotate tree node)
+            (double-left-rotate tree node))
+        (if (<= sub-imbalance 0)
+            (right-rotate tree node)
+            (double-right-rotate tree node)))))
 
 (defun compute-and-rebalance-insert (tree node)
   (if (not (null node))
@@ -105,6 +85,18 @@
 (defmethod new-node ((tree avl-tree) data)
   (make-instance (node-type tree) :data data))
 
+(defmethod left-rotate ((tree avl-tree) node)
+  (multiple-value-bind (upper lower) (call-next-method)
+    (recompute-height lower)
+    (recompute-height upper)
+    (values upper lower)))
+
+(defmethod right-rotate ((tree avl-tree) node)
+  (multiple-value-bind (upper lower) (call-next-method)
+    (recompute-height lower)
+    (recompute-height upper)
+    (values upper lower)))
+
 (defmethod insert ((tree avl-tree) val)
   (let ((new-node (call-next-method)))
     (if (not (null new-node))
@@ -112,10 +104,10 @@
     new-node))
 
 (defmethod delete ((tree avl-tree) val)
-  (let ((parent-of-deleted (call-next-method)))
-    (if (not (null parent-of-deleted))
-        (compute-and-rebalance-delete tree parent-of-deleted))
-    parent-of-deleted))
+  (let ((deleted (call-next-method)))
+    (if (and (not (null deleted)) (not (null (parent deleted))))
+        (compute-and-rebalance-delete tree (parent deleted)))
+    deleted))
 
 (defmethod merge-trees ((left-tree avl-tree) (right-tree avl-tree) data)
   (error 'unsupported-operation :message "It is not possible to merge avl trees efficiently"))
