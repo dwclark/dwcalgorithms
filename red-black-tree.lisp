@@ -61,41 +61,6 @@
   (or (red-violations? start-node)
       (black-violations? start-node)))
 
-;; (defun red-black-rebalance-insert (tree node)
-;;   (let* ((parent-node (parent node))
-;;          (grand-parent-node (if (not (null parent-node)) (parent parent-node) nil))
-;;          (uncle-node (sibling parent-node)))
-         
-;;     (cond
-;;       ((red? uncle-node)
-;;        (progn
-;;          (setf (color parent-node) :black)
-;;          (setf (color uncle-node) :black)
-;;          (setf (color grand-parent-node) :red)
-;;          (if (red-violation? grand-parent-node)
-;;              (red-black-rebalance-insert tree grand-parent-node))))
-      
-;;       ;;from here on out, the uncle has to be black
-;;       ((right? parent-node)
-;;        (if (right? node) ;;R-R case
-;;            (left-rotate-node grand-parent-node)
-;;            (double-left-rotate-node grand-parent-node)))
-
-;;       (t
-;;        (if (left? node)
-;;            (right-rotate-node grand-parent-node) ;;L-L case
-;;            (double-right-rotate-node grand-parent-node))))
-
-;;     (if (root? parent-node)
-;;         (setf (root tree) parent-node))))
-  
-;; (defmethod insert ((tree red-black-tree) val)
-;;   (let ((new-node (call-next-method)))
-;;     (if (and (not (null new-node)) (red-violation? new-node))
-;;         (red-black-rebalance-insert tree new-node))
-;;     (setf (color (root tree)) :black)
-;;     new-node))
-
 (defmethod insert ((tree red-black-tree) val)
   (let ((new-node (call-next-method)))
     (if (not (null new-node))
@@ -153,15 +118,6 @@
         (right-rotate tree g)
         (left-rotate tree g))))
 
-;;major problem: this no longer sets the root correctly
-;;2 solutions
-;;easy: walk from up from to-deleted, find the root, and set it
-;;hard: figure out a way to return new root after deletion cases return
-;;medium: check for root swap in rotation code, this will also simplify avl code
-;;then only have to check that the-child is new root or if to-delete was the last element
-;;also need to set the new tree size as well here.
-;;probably should re-write the insertion code to use wiki's method and 
-;;remove recoloration inside of the node rotation code.
 (defmethod delete ((tree red-black-tree) val)
   (multiple-value-bind (point succ) (find-deletion-points tree val)
     (if point
@@ -178,7 +134,6 @@
                 (if (= 1 (size tree))
                     (setf (root tree) the-child)))
               (progn
-                (format t "Deleting leaf node~%")
                 (if (black? to-delete)
                     (delete-case-1 tree to-delete))
                 (remove-node to-delete)
@@ -186,12 +141,10 @@
                     (setf (root tree) nil))))))))
 
 (defun delete-case-1 (tree node)
-  (format t "In delete-case-1~%")
   (if (not (null (parent node)))
       (delete-case-2 tree node)))
 
 (defun delete-case-2 (tree node)
-  (format t "In delete-case-2~%")
   (let ((s (sibling node))
         (p (parent node)))
     (if (red? s)
@@ -200,15 +153,14 @@
           (setf (color s) :black)
           (if (left? node)
               (left-rotate tree p)
-              (right-rotate tree p)))
-        (delete-case-3 tree node))))
+              (right-rotate tree p))))
+    (delete-case-3 tree node)))
 
 (defun delete-case-3 (tree node)
-  (format t "In delete-case-3~%")
   (let ((s (sibling node))
         (p (parent node)))
     (if (and (black? p)
-             (black? s)
+             (black-non-leaf? s)
              (black? (left s))
              (black? (right s)))
         (progn
@@ -217,11 +169,10 @@
         (delete-case-4 tree node))))
 
 (defun delete-case-4 (tree node)
-  (format t "In delete-case-4~%")
   (let ((s (sibling node))
         (p (parent node)))
     (if (and (red? p)
-             (black? s)
+             (black-non-leaf? s)
              (black? (left s))
              (black? (right s)))
         (progn
@@ -230,9 +181,8 @@
         (delete-case-5 tree node))))
 
 (defun delete-case-5 (tree node)
-  (format t "In delete-case-5~%")
   (let ((s (sibling node)))
-    (if (black? s)
+    (if (black-non-leaf? s)
         (progn
           (if (and (left? node)
                    (black? (right s))
@@ -251,7 +201,6 @@
           (delete-case-6 tree node)))))
                 
 (defun delete-case-6 (tree node)
-  (format t "In delete-case-6~%")
   (let* ((s (sibling node))
          (p (parent node)))
     (setf (color s) (color p))

@@ -1,8 +1,5 @@
 (in-package #:dwcalgorithms)
 
-;;TODO
-;;1) Implement red/black tree for this interface
-
 (defgeneric insert-left (tree node data))
 (defgeneric insert-right (tree node data))
 (defgeneric merge-trees (left-tree right-tree root-data))

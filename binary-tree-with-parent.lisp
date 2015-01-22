@@ -53,7 +53,7 @@
     (with-unique-names (permanent-root y beta)
       (let ((func (if (eq the-direction 'right) 'left 'right)))
         `(progn
-           ;(assert (not (null (,func ,x))))
+           (assert (not (null (,func ,x))))
            (let* ((,permanent-root (parent ,x))
                   (,y (,func ,x))
                   (,beta (,the-direction ,y)))
