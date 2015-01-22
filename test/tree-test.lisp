@@ -90,8 +90,10 @@
 	    (5am:is (sorted? collector :cmp #'<=>))))))
 
 (5am:test test-tree-map
-  (let ((map (make-instance 'tree-map :elements (list (cons 1 "one") (cons 2 "two")
-						      (cons 3 "tree") (cons 4 "four")))))
+  (let* ((elements (list (cons 1 "one") (cons 2 "two")
+                         (cons 3 "tree") (cons 4 "four")))
+         (map (make-instance 'tree-map :elements elements)))
+
     (5am:is (equal "four" ([] map 4)))
     (setf ([] map 5) "five")
     (5am:is (= 5 (size map)))

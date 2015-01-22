@@ -22,7 +22,7 @@
                (:file "sort" :depends-on ("heap"))
                (:file "search" :depends-on ("sort"))
                (:file "rbtree" :depends-on ("searchtree"))
-               (:file "treemap" :depends-on ("rbtree"))
+               (:file "treemap" :depends-on ("red-black-tree"))
                (:file "orderstatistics" :depends-on ("rbtree"))))
 
 (defun run-all-tests ()

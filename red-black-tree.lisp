@@ -61,6 +61,12 @@
   (or (red-violations? start-node)
       (black-violations? start-node)))
 
+(defmethod search ((tree red-black-tree) val)
+  (multiple-value-bind (point func) (find-insertion-point tree val)
+    (if (found-point? point func)
+        point
+        nil)))
+
 (defmethod insert ((tree red-black-tree) val)
   (let ((new-node (call-next-method)))
     (if (not (null new-node))
