@@ -86,7 +86,7 @@
                     nil))
         (values nil nil))))
 
-(defun found-insertion-point? (point func)
+(defun found-insertion-point? (func)
   (not (null func)))
 
 (defun found-point? (point func)
@@ -95,7 +95,7 @@
 (defmethod insert ((tree binary-search-tree) val)
   (multiple-value-bind (point func) (find-insertion-point tree val)
     (cond 
-      ((found-insertion-point? point func)
+      ((found-insertion-point? func)
        (funcall func tree point val))
       
       ((found-point? point func)

@@ -89,15 +89,3 @@
 	    (inorder-walk tree func)
 	    (5am:is (sorted? collector :cmp #'<=>))))))
 
-(5am:test test-tree-map
-  (let* ((elements (list (cons 1 "one") (cons 2 "two")
-                         (cons 3 "tree") (cons 4 "four")))
-         (map (make-instance 'tree-map :elements elements)))
-
-    (5am:is (equal "four" ([] map 4)))
-    (setf ([] map 5) "five")
-    (5am:is (= 5 (size map)))
-    (5am:is (equal "five" ([] map 5)))
-    (setf ([] map 3) "iii")
-    (5am:is (equal "iii" ([] map 3)))
-    (5am:is (= 5 (size map)))))

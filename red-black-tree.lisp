@@ -99,7 +99,6 @@
 
 (defun insert-case-4 (tree node)
   (let* ((p (parent node))
-         (g (parent p))
          (next-n node))
 
     (cond

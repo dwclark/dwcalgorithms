@@ -4,11 +4,13 @@
   ((parent :initform nil :initarg :parent :accessor parent)))
 
 (defmacro direction? (node direction-func)
-  `(with-accessors ((parent parent)) node
-     (if (or (null parent)
-             (null (,direction-func parent)))
-         nil
-         (eq (,direction-func parent) node))))
+  (once-only (node)
+    (with-unique-names (p)
+      `(let ((,p (parent ,node)))
+         (if (or (null ,p)
+                 (null (,direction-func ,p)))
+             nil
+             (eq (,direction-func ,p) ,node))))))
 
 (defun right? (node)
   (direction? node right))
