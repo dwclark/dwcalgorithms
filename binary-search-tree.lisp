@@ -147,13 +147,16 @@
         succ)
       point))
 
-(defmethod delete ((tree binary-search-tree) val)
-  (multiple-value-bind (point succ) (find-deletion-points tree val)
-    (if point
+(defun perform-deletion (tree point succ)
+  (if point
         (let ((to-delete (setup-final-deletion-point point succ)))
           (remove-node to-delete)
           (decf (size tree))
           (if (root? to-delete)
               (setf (root tree) (child to-delete)))
           to-delete)
-        nil)))
+        nil))
+
+(defmethod delete ((tree binary-search-tree) val)
+  (multiple-value-bind (point succ) (find-deletion-points tree val)
+    (perform-deletion tree point succ)))

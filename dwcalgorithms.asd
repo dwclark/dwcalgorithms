@@ -21,7 +21,7 @@
                (:file "queue" :depends-on ("heap"))
                (:file "sort" :depends-on ("heap"))
                (:file "search" :depends-on ("sort"))
-               ;(:file "rbtree" :depends-on ("searchtree"))
+               (:file "treap" :depends-on ("binary-search-tree"))
                (:file "tree-map" :depends-on ("red-black-tree"))))
                                         ;(:file "orderstatistics" :depends-on ("rbtree"))
 

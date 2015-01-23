@@ -713,3 +713,62 @@
     (setf ([] map 3) "iii")
     (5am:is (equal "iii" ([] map 3)))
     (5am:is (= 5 (size map)))))
+
+(5am:test test-priority-violations?
+  (let ((tree (make-instance 'treap))
+        (the-root (make-instance 'treap-node :data 10 :priority 100))
+        (the-left (make-instance 'treap-node :data 1 :priority 10))
+        (the-right (make-instance 'treap-node :data 100 :priority 1)))
+    (setf (root tree) the-root)
+    (5am:is (not (priority-violations? tree)))
+    (link-on left the-left the-root)
+    (5am:is (not (priority-violations? tree)))
+    (link-on right the-right the-root)
+    (5am:is (not (priority-violations? tree)))
+    (link-on left nil the-root)
+    (5am:is (not (priority-violations? tree)))
+    (link-on left the-left the-root)
+    (setf (priority the-root) 0)
+    (5am:is (priority-violations? tree))
+    (setf (priority the-left) -1)
+    (5am:is (priority-violations? tree))))
+
+(defun print-node-priorities (node)
+   (format t "Node Data: ~A, Parent Priority: ~A My Priority: ~A~%" 
+           (data node)
+           (if (not (null (parent node))) (priority (parent node)) nil)
+           (priority node)))
+
+(5am:test test-treap-inserts
+  (let ((first (make-instance 'treap))
+        (second (make-instance 'treap))
+        (random-numbers (random-num-array 150 10000)))
+    (loop for i from 1 to 20 do (insert first i))
+    (5am:is (not (priority-violations? first)))
+    (loop for i across random-numbers do (insert second i))
+    (5am:is (not (priority-violations? second)))))
+
+(5am:test test-treap-deletes
+  (let ((first (make-instance 'treap))
+        (second (make-instance 'treap))
+        (random-numbers (random-num-array 150 10000))
+        (first-vector (make-array 20 :adjustable t :fill-pointer 0)))
+
+    (loop for i from 1 to 20 do (insert first i))
+    (in-order first (add-to-vector first-vector))
+    (5am:is (sorted? first-vector))
+    (loop
+       for i from 1 to 20
+       do (progn
+            (setf (fill-pointer first-vector) 0)
+            (delete first i)
+            (in-order first (add-to-vector first-vector))
+            (5am:is (sorted? first-vector))
+            (5am:is (not (priority-violations? first)))))
+    (loop for i across random-numbers do (insert second i))
+    (shuffle! random-numbers)
+    (loop
+       for i across random-numbers
+       do (progn
+            (delete second i)
+            (5am:is (not (priority-violations? second)))))))
