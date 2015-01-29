@@ -15,13 +15,9 @@
 (defun sibling (node &optional cmp)
   (with-accessors ((parent parent)) node
     (if (not (null parent))
-        (if (null cmp)
-            (if (right? node)
-                (left parent)
-                (right parent))
-            (if (<? cmp (data parent) (data node))
-                (left parent)
-                (right parent)))
+        (if (right? node)
+            (left parent)
+            (right parent))
         nil)))
 
 (defclass red-black-tree (binary-search-tree)

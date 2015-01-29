@@ -38,6 +38,36 @@
 (defun previous-node (node)
   (one-node-to-the left node))
 
+(defun rebalance (node)
+  (assert (not (null node)))
+  (let* ((vec (make-array 10 :adjustable t :fill-pointer 0))
+         (original-parent (parent node))
+         (node-direction (if (right? node) :right :left)))
+          
+    (in-order-node node #'(lambda (n) 
+                            (vector-push-extend n vec)))
+    (labels 
+        ((calculate-median (left right)
+           (truncate (/ (+ left right) 2)))
+         
+         (median-insert (left right parent link-direction)
+           (if (< left right)
+               (let* ((mid (calculate-median left right))
+                      (current (aref vec mid)))
+                 (if (eq :left link-direction)
+                     (link-on left current parent)
+                     (link-on right current parent))
+                 (median-insert left mid current :left)
+                 (median-insert (1+ mid) right current :right)))))
+      (loop 
+         for node across vec
+         do (progn
+              (setf (parent node) nil)
+              (setf (left node) nil)
+              (setf (right node) nil)))
+      (median-insert 0 (length vec) original-parent node-direction)
+      (aref vec (calculate-median 0 (length vec))))))
+
 (defclass binary-search-tree (binary-tree-with-parent)
   ((node-type :initform 'binary-search-node :reader node-type :allocation :class)
    (cmp :initform #'<=> :initarg :cmp :reader cmp)))
@@ -52,8 +82,10 @@
           (insertion-point nil))
 
       (loop
+         with height = 1
          while (and (not (null iter)) (not (null insertion-func)))
          do (progn
+              (incf height)
               (setf insertion-point iter)
               (let ((data-to-cmp (data insertion-point)))
                 (cond 
@@ -74,7 +106,7 @@
                    (progn
                      (setf insertion-func #'insert-right)
                      (setf iter (right insertion-point)))))))
-         finally (return (values insertion-point insertion-func))))))
+         finally (return (values insertion-point insertion-func height))))))
 
 (defun find-deletion-points (tree data)
   (multiple-value-bind (point func) (find-insertion-point tree data)
@@ -93,16 +125,16 @@
   (and (not (null point)) (null func)))
 
 (defmethod insert ((tree binary-search-tree) val)
-  (multiple-value-bind (point func) (find-insertion-point tree val)
+  (multiple-value-bind (point func height) (find-insertion-point tree val)
     (cond 
       ((found-insertion-point? func)
-       (funcall func tree point val))
+       (values (funcall func tree point val) height))
       
       ((found-point? point func)
        (setf (data point) val)
-       nil)
+       (values nil nil))
       
-      (t  nil))))
+      (t  (values nil nil)))))
 
 (defmethod search ((tree binary-search-tree) val)
   (multiple-value-bind (point func) (find-insertion-point tree val)
@@ -160,3 +192,4 @@
 (defmethod delete ((tree binary-search-tree) val)
   (multiple-value-bind (point succ) (find-deletion-points tree val)
     (perform-deletion tree point succ)))
+

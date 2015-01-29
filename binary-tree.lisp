@@ -61,6 +61,11 @@
                (funcall proc node)))))
     (inner node)))
 
+(defun size-node (node)
+  (let ((ret 0))
+    (pre-order-node node #'(lambda (n) (incf ret)))
+    ret))
+
 (defclass binary-tree ()
   ((root :initform nil :accessor root)
    (size :initform 0 :accessor size)

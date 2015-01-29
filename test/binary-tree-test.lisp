@@ -772,3 +772,56 @@
        do (progn
             (delete second i)
             (5am:is (not (priority-violations? second)))))))
+
+(5am:test rebalance-test
+  (let ((tree (make-instance 'binary-search-tree))
+        (the-root nil)
+        (test-vec (make-array 7 :adjustable t :fill-pointer 0)))
+    (loop for i from 1 upto 7 do (insert tree i))
+    (setf the-root (rebalance (root tree)))
+    (setf (root tree) the-root)
+    (in-order tree #'(lambda (v) (vector-push-extend v test-vec)))
+    (5am:is (sorted? test-vec))
+    (5am:is (= 4 (data (root tree))))))
+
+(5am:test rebalance-test-even
+  (let ((tree (make-instance 'binary-search-tree))
+        (the-root nil)
+        (test-vec (make-array 8 :adjustable t :fill-pointer 0)))
+    (loop for i from 1 upto 8 do (insert tree i))
+    (setf the-root (rebalance (root tree)))
+    (setf (root tree) the-root)
+    (in-order tree #'(lambda (v) (vector-push-extend v test-vec)))
+    (5am:is (sorted? test-vec))
+    (5am:is (= 5 (data (root tree))))))
+        
+(5am:test size-node-test
+  (let ((tree (make-instance 'binary-search-tree)))
+    (loop for i from 1 to 8 do (insert tree i))
+    (5am:is (= 8 (size-node (root tree))))
+    (5am:is (= 0 (size-node nil)))))
+
+(5am:test scapegoat-insert-test
+  (let ((low-alpha (make-instance 'scapegoat-tree :alpha 0.55))
+        (high-alpha (make-instance 'scapegoat-tree :alpha 0.75)))
+    (loop 
+       for n from 1 to 3 
+       do (progn 
+            (insert low-alpha n)
+            (insert high-alpha n)))
+    (5am:is (= 2 (data (root low-alpha))))
+    (5am:is (= 1 (data (root high-alpha))))
+    (loop 
+       for n from 4 to 9
+       do (insert high-alpha n))
+    (in-order-node (root high-alpha)
+                   #'(lambda (n)
+                       (cond
+                         ((= 8 (data n))
+                          (= 5 (data (parent n))))
+                         
+                         ((= 7 (data n))
+                          (= 8 (data (parent n))))
+
+                         ((= 6 (data n))
+                          (= 7 (data (parent n)))))))))
