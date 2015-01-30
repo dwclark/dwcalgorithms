@@ -1,7 +1,8 @@
 (in-package #:dwcalgorithms)
 
 (defclass scapegoat-tree (binary-search-tree)
-  ((alpha :initform 0.67 :initarg :alpha :accessor alpha)))
+  ((alpha :initform 0.67 :initarg :alpha :accessor alpha)
+   (max-node-count :initform 0 :accessor max-node-count)))
 
 (defun alpha-height-balanced? (tree height)
   (<= height (1+ (log (size tree) (/ 1 (alpha tree))))))
@@ -15,9 +16,21 @@
 
 (defmethod insert ((tree scapegoat-tree) val)
   (multiple-value-bind (new-node height) (call-next-method)
-    (if (not (alpha-height-balanced? tree height))
-        (let* ((the-scapegoat (scapegoat tree new-node))
-               (top (rebalance the-scapegoat)))
-          (if (root? top)
-              (setf (root tree) top))))))
+    (if new-node
+        (progn
+          (setf (max-node-count tree) (max (max-node-count tree) (size tree)))
+          (if (not (alpha-height-balanced? tree height))
+              (let* ((the-scapegoat (scapegoat tree new-node))
+                     (top (rebalance the-scapegoat)))
+                (if (root? top)
+                    (setf (root tree) top))))))))
+
+(defmethod delete ((tree scapegoat-tree) val)
+  (let ((deleted (call-next-method)))
+    (if (and deleted (<= (size tree) (* (alpha tree) (max-node-count tree))))
+        (progn
+          (setf (root tree) (rebalance (root tree)))
+          (setf (max-node-count tree) (size tree))))
+    deleted))
+          
                      

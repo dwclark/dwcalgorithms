@@ -825,3 +825,12 @@
 
                          ((= 6 (data n))
                           (= 7 (data (parent n)))))))))
+
+(5am:test scapegoat-insert-test
+  (let ((tree (make-instance 'scapegoat-tree :alpha 0.6)))
+    (loop for n from 1 to 10 do (insert tree n))
+    (loop for n from 8 to 10 do (delete tree n))
+    (5am:is (= 10 (max-node-count tree)))
+    (delete tree 7)
+    (5am:is (= 6 (max-node-count tree)))
+    (5am:is (= 4 (data (root tree))))))
