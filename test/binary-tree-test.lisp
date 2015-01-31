@@ -402,27 +402,16 @@
 
     (5am:is (= 1 (size tree)))))
 
-(defparameter *number-constraint-tests* 150)
-
-(defun avl-balanced? (tree)
-  (let ((results (make-array *number-constraint-tests* :adjustable t :fill-pointer 0)))
-    (in-order-node (root tree) 
-                   #'(lambda (node)
-                       (if (>= (balance-factor node) 2)
-                           (vector-push-extend 1 results)
-                           (vector-push-extend 0 results))))
-    (5am:is (= 0 (count 1 results)))))
-
 (5am:test honors-avl-constraints
   (let ((tree (make-instance 'avl-tree))
         (random-numbers (random-num-array 150 10000)))
     (loop for i across random-numbers do (insert tree i))
-    (avl-balanced? tree)
+    (5am:is (avl-balanced? tree))
     (loop 
        for i across random-numbers
        do (progn
             (delete tree i)
-            (avl-balanced? tree)))))
+            (5am:is (avl-balanced? tree))))))
 
 (5am:test red-violations?-test
   (let ((root (make-instance 'red-black-node :color :black)))
@@ -463,18 +452,18 @@
 (5am:test first-three-red-black
   (let ((tree (make-instance 'red-black-tree)))
     (insert tree 10)
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (insert tree 5)
     (insert tree 15)
-    (5am:is (not (red-black-violations? (root tree))))))
+    (5am:is (red-black-balanced? tree))))
 
 (5am:test four-red-black
   (let ((on-left (make-instance 'red-black-tree))
         (on-right (make-instance 'red-black-tree)))
     (loop for i in (list 2 1 3 0) do (insert on-left i))
-    (5am:is (not (red-black-violations? (root on-left))))
+    (5am:is (red-black-balanced? on-left))
     (loop for i in (list 2 1 3 4) do (insert on-right i))
-    (5am:is (not (red-black-violations? (root on-right))))))
+    (5am:is (red-black-balanced? on-right))))
 
 (defun print-node-values (node)
   (format t "Node Data: ~A, Color: ~A, Parent: ~A~%" (data node) (color node)
@@ -486,17 +475,17 @@
        for i in (list 1 0 3 2 5 4 6 7) 
        do (progn
             (insert tree i)
-            (5am:is (not (red-black-violations? (root tree))))))))
+            (5am:is (red-black-balanced? tree))))))
 
 (5am:test ascending-red-black-linked-list-insert
   (let ((tree (make-instance 'red-black-tree)))
     (loop for i from 1 to 100 do (insert tree i))
-    (5am:is (not (red-black-violations? (root tree))))))
+    (5am:is (red-black-balanced? tree))))
 
 (5am:test descending-red-black-linked-list-insert
   (let ((tree (make-instance 'red-black-tree)))
     (loop for i from 1 to 100 do (insert tree i))
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (5am:is (= 100 (size tree)))))
 
 (5am:test random-red-black-insertions
@@ -506,26 +495,26 @@
        for i across random-numbers
        do (progn
             (insert tree i)
-            (5am:is (not (red-black-violations? (root tree))))))))
+            (5am:is (red-black-balanced? tree))))))
     
 
 (5am:test red-black-deletion-of-black-node-with-red-child
   (let ((tree (make-instance 'red-black-tree)))
     (loop for i in (list 1 0 3 2 5 4 6 7) do (insert tree i))
     (delete tree 6)
-    (5am:is (not (red-black-violations? (root tree))))))
+    (5am:is (red-black-balanced? tree))))
 
 (5am:test red-black-deletion-of-red-node-with-black-child
   (let ((tree (make-instance 'red-black-tree)))
     (loop for i in (list 1 0 3 2 5 4 6 7) do (insert tree i))
     (delete tree 1)
-    (5am:is (not (red-black-violations? (root tree))))))
+    (5am:is (red-black-balanced? tree))))
 
 (5am:test red-black-deletion-of-black-leaf-node
   (let ((tree (make-instance 'red-black-tree)))
     (loop for i in (list 1 0 3 2 5 4 6 7) do (insert tree i))
     (delete tree 2)
-    (5am:is (not (red-black-violations? (root tree))))))
+    (5am:is (red-black-balanced? tree))))
 
 (5am:test delete-case-5-right-leaning
   (let ((10-node (make-instance 'red-black-node :color :red :data 10))
@@ -643,28 +632,28 @@
     (link-on left 13-node 15-node)
     (link-on right 17-node 15-node)
 
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (5am:is (= 7 (size tree)))
     (delete tree 7)
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (5am:is (= 6 (size tree)))
     (delete tree 15)
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (5am:is (= 5 (size tree)))
     (delete tree 13)
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (5am:is (= 4 (size tree)))
     (delete tree 17)
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (5am:is (= 3 (size tree)))
     (delete tree 10)
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (5am:is (= 2 (size tree)))
     (delete tree 5)
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (5am:is (= 1 (size tree)))
     (delete tree 3)
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (5am:is (= 0 (size tree)))))
 
 (5am:test test-random-deletes
@@ -678,7 +667,7 @@
        for i across vals
        do (progn
             (delete tree i)
-            (5am:is (not (red-black-violations? (root tree))))))))
+            (5am:is (red-black-balanced? tree))))))
 
 (5am:test bad-deletion
   (let ((tree (make-instance 'red-black-tree))
@@ -697,9 +686,9 @@
     (link-on right 6-node 4-node)
     (link-on left 5-node 6-node)
     (link-on right 7-node 6-node)
-    (5am:is (not (red-black-violations? (root tree))))
+    (5am:is (red-black-balanced? tree))
     (delete tree 8)
-    (5am:is (not (red-black-violations? (root tree))))))
+    (5am:is (red-black-balanced? tree))))
 
 (5am:test test-tree-map
   (let* ((elements (list (cons 1 "one") (cons 2 "two")
@@ -834,3 +823,38 @@
     (delete tree 7)
     (5am:is (= 6 (max-node-count tree)))
     (5am:is (= 4 (data (root tree))))))
+
+(5am:test order-statistic-red-black-tree
+  (let ((tree (make-instance 'os-red-black-tree)))
+    (loop for n from 1 to 10 do (insert tree (* 2 n)))
+    (loop 
+       for n from 1 to 10
+       do (5am:is (= (* 2 n) (kth tree n))))
+    (5am:is (red-black-balanced? tree))
+    (delete tree 10)
+    (5am:is (= 12 (kth tree 5)))
+    (delete tree 4)
+    (5am:is (= 6 (kth tree 2)))))
+
+(5am:test order-statistic-avl-tree
+  (let ((tree (make-instance 'os-avl-tree)))
+    (loop for n from 1 to 10 do (insert tree (* 2 n)))
+    (loop 
+       for n from 1 to 10
+       do (5am:is (= (* 2 n) (kth tree n))))
+    (5am:is (avl-balanced? tree))
+    (delete tree 10)
+    (5am:is (= 12 (kth tree 5)))
+    (delete tree 4)
+    (5am:is (= 6 (kth tree 2)))))
+
+(5am:test order-statistic-binary-search-tree
+  (let ((tree (make-instance 'os-binary-search-tree)))
+    (loop for n from 1 to 10 do (insert tree (* 2 n)))
+    (loop 
+       for n from 1 to 10
+       do (5am:is (= (* 2 n) (kth tree n))))
+    (delete tree 10)
+    (5am:is (= 12 (kth tree 5)))
+    (delete tree 4)
+    (5am:is (= 6 (kth tree 2)))))

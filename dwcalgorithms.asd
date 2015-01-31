@@ -22,8 +22,8 @@
                (:file "sort" :depends-on ("heap"))
                (:file "search" :depends-on ("sort"))
                (:file "treap" :depends-on ("binary-search-tree"))
-               (:file "tree-map" :depends-on ("red-black-tree"))))
-                                        ;(:file "orderstatistics" :depends-on ("rbtree"))
+               (:file "tree-map" :depends-on ("red-black-tree"))
+               (:file "order-statistic-tree" :depends-on ("red-black-tree" "avl-tree"))))
 
 (defun run-all-tests ()
   (loop 

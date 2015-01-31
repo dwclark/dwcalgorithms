@@ -1,5 +1,9 @@
 (in-package #:dwcalgorithms)
 
+(defgeneric remove-node (tree node))
+(defgeneric left-rotate (tree node))
+(defgeneric right-rotate (tree node))
+
 (defclass binary-node-with-parent (binary-node)
   ((parent :initform nil :initarg :parent :accessor parent)))
 
@@ -36,20 +40,6 @@
            (setf (,direction ,p-node) ,node))
        ,node)))
 
-(defun remove-node (node)
-  (let ((children (number-of-children node)))
-    (assert (< children 2))
-    
-    (with-accessors ((parent parent)) node
-      (if (not (null (left node)))
-          (if (right? node)
-              (link-on right (left node) parent)
-              (link-on left (left node) parent))
-          (if (right? node)
-              (link-on right (right node) parent)
-              (link-on left (right node) parent)))
-      node)))
-
 (defmacro direction-rotate (the-direction x)
   (once-only (x)
     (with-unique-names (permanent-root y beta)
@@ -85,8 +75,19 @@
 (defclass binary-tree-with-parent (binary-tree)
   ((node-type :initform 'binary-node-with-parent :reader node-type :allocation :class)))
 
-(defmethod new-node ((tree binary-tree-with-parent) data)
-  (make-instance (node-type tree) :data data))
+(defmethod remove-node ((tree binary-tree-with-parent) node)
+  (let ((children (number-of-children node)))
+    (assert (< children 2))
+    
+    (with-accessors ((parent parent)) node
+      (if (not (null (left node)))
+          (if (right? node)
+              (link-on right (left node) parent)
+              (link-on left (left node) parent))
+          (if (right? node)
+              (link-on right (right node) parent)
+              (link-on left (right node) parent)))
+      node)))
 
 (defmethod insert-left ((tree binary-tree-with-parent) node data)
   (link-on left (call-next-method) node))

@@ -70,10 +70,8 @@
 
 (defclass binary-search-tree (binary-tree-with-parent)
   ((node-type :initform 'binary-search-node :reader node-type :allocation :class)
-   (cmp :initform #'<=> :initarg :cmp :reader cmp)))
-
-(defmethod new-node ((tree binary-search-tree) data)
-  (make-instance (node-type tree) :data data))
+   (cmp :initform #'<=> :initarg :cmp :reader cmp)
+   (allow-duplicates? :initform nil :initarg :allow-duplicates? :reader allow-duplicates?)))
 
 (defun find-insertion-point (tree data)
   (with-accessors ((cmp cmp)) tree
@@ -182,7 +180,7 @@
 (defun perform-deletion (tree point succ)
   (if point
         (let ((to-delete (setup-final-deletion-point point succ)))
-          (remove-node to-delete)
+          (remove-node tree to-delete)
           (decf (size tree))
           (if (root? to-delete)
               (setf (root tree) (child to-delete)))

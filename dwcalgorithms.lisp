@@ -20,7 +20,5 @@
 (defgeneric enqueue (the-queue element))
 (defgeneric dequeue (the-queue))
 
-(defgeneric new-node (tree data))
-
 (defgeneric [] (map key))
 (defgeneric (setf []) (val map key))

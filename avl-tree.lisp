@@ -82,8 +82,14 @@
 (defclass avl-tree (binary-search-tree)
   ((node-type :initform 'avl-node :reader node-type :allocation :class)))
 
-(defmethod new-node ((tree avl-tree) data)
-  (make-instance (node-type tree) :data data))
+(defun avl-balanced? (tree)
+  (let ((results (make-array (size tree) :adjustable t :fill-pointer 0)))
+    (in-order-node (root tree) 
+                   #'(lambda (node)
+                       (if (>= (balance-factor node) 2)
+                           (vector-push-extend 1 results)
+                           (vector-push-extend 0 results))))
+    (= 0 (count 1 results))))
 
 (defmethod left-rotate ((tree avl-tree) node)
   (multiple-value-bind (upper lower) (call-next-method)

@@ -12,7 +12,7 @@
 (defun black-non-leaf? (node)
   (and (not (null node)) (eq (color node) :black)))
 
-(defun sibling (node &optional cmp)
+(defun sibling (node)
   (with-accessors ((parent parent)) node
     (if (not (null parent))
         (if (right? node)
@@ -22,9 +22,6 @@
 
 (defclass red-black-tree (binary-search-tree)
   ((node-type :initform 'red-black-node :reader node-type :allocation :class)))
-
-(defmethod new-node ((tree red-black-tree) data)
-  (make-instance (node-type tree) :data data))
 
 (defun red-violation? (node)
   (with-accessors ((parent parent)) node
@@ -56,6 +53,9 @@
 (defun red-black-violations? (start-node)
   (or (red-violations? start-node)
       (black-violations? start-node)))
+
+(defun red-black-balanced? (tree)
+    (not (red-black-violations? (root tree))))
 
 (defmethod search ((tree red-black-tree) val)
   (multiple-value-bind (point func) (find-insertion-point tree val)
@@ -127,7 +127,7 @@
           (decf (size tree))
           (if (= 1 num)
               (let ((the-child (child to-delete)))
-                (remove-node to-delete)
+                (remove-node tree to-delete)
                 (if (black? to-delete)
                     (if (red? the-child)
                         (setf (color the-child) :black)
@@ -137,7 +137,7 @@
               (progn
                 (if (black? to-delete)
                     (delete-case-1 tree to-delete))
-                (remove-node to-delete)
+                (remove-node tree to-delete)
                 (if (= 0 (size tree))
                     (setf (root tree) nil))))))))
 

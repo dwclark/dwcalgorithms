@@ -63,7 +63,7 @@
 
 (defun size-node (node)
   (let ((ret 0))
-    (pre-order-node node #'(lambda (n) (incf ret)))
+    (pre-order-node node #'(lambda (n) (incf ret) n))
     ret))
 
 (defclass binary-tree ()
@@ -75,7 +75,7 @@
   (setf (size tree) 0)
   (setf (root tree) nil))
 
-(defmethod new-node ((tree binary-tree) data)
+(defun new-node (tree data)
   (make-instance (node-type tree) :data data))
 
 (defmacro insert-node-at (func tree node data)

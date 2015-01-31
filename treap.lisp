@@ -6,9 +6,6 @@
 (defclass treap (binary-search-tree)
   ((node-type :initform 'treap-node :reader node-type :allocation :class)))
 
-(defmethod new-node ((tree treap) data)
-    (make-instance (node-type tree) :data data))
-
 (defmacro violation-on? (direction node)
   (once-only (node)
     `(and (not (null (,direction ,node)))
