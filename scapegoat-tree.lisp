@@ -1,5 +1,9 @@
 (in-package #:dwcalgorithms)
 
+;An alternate definition of scapegoat-tree would be to implement it in
+;terms of order statistics. This would simplify the implementation.
+;However, keeping the rank of individual nodes nullifies one of the
+;selling points of scapegoat trees, that no extra per node information is required.
 (defclass scapegoat-tree (binary-search-tree)
   ((alpha :initform 0.67 :initarg :alpha :accessor alpha)
    (max-node-count :initform 0 :accessor max-node-count)))

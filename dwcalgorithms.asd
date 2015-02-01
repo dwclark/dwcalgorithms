@@ -23,7 +23,8 @@
                (:file "search" :depends-on ("sort"))
                (:file "treap" :depends-on ("binary-search-tree"))
                (:file "tree-map" :depends-on ("red-black-tree"))
-               (:file "order-statistic-tree" :depends-on ("red-black-tree" "avl-tree"))))
+               (:file "order-statistic-tree" :depends-on ("red-black-tree" "avl-tree"))
+               (:file "interval")))
 
 (defun run-all-tests ()
   (loop 
@@ -34,7 +35,8 @@
                       (uiop:find-symbol* '#:search-suite :dwcalgorithms)
                       (uiop:find-symbol* '#:stack-suite :dwcalgorithms)
                       (uiop:find-symbol* '#:util-suite :dwcalgorithms)
-                      (uiop:find-symbol* '#:binary-tree-suite :dwcalgorithms))
+                      (uiop:find-symbol* '#:binary-tree-suite :dwcalgorithms)
+                      (uiop:find-symbol* '#:interval-suite :dwcalgorithms))
      do (uiop:symbol-call :fiveam '#:run! sym)))
 
 (asdf:defsystem dwcalgorithms/test
@@ -54,4 +56,5 @@
                                      (:file "util-test")
                                      (:file "heap-test")
                                      (:file "queue-test")
-                                     (:file "binary-tree-test" :depends-on ("testing-utils"))))))
+                                     (:file "binary-tree-test" :depends-on ("testing-utils"))
+                                     (:file "interval-test")))))
