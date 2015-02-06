@@ -28,7 +28,7 @@
 (defun right-of (one two)
   (< (upper two) (lower one)))
 
-(defun overlap (one two)
+(defun overlap? (one two)
   (not (or (left-of one two)
            (right-of one two))))
 
